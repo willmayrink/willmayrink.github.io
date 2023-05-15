@@ -7,23 +7,23 @@ sidebar:
     education: True # set to False if you want education in main section instead of in sidebar
 
     # Profile information
-    name: Alan Doe
-    tagline: Full Stack Developer
+    name: Willian Mayrink
+    tagline: English Teacher, IT Technician, ISO 14001(2015) Auditor, Financial Manager
     avatar: profile.png  #place a 100x100 picture inside /assets/images/ folder and provide the name of the file below
 
     # Sidebar links
-    email: hello@webjeda.com
-    phone: 012 345 6789
-    timezone: America/Cancun Timezone
+    email: will.mayrink@gmail.com
+    phone: (24)99926-5170
+    timezone: São Paulo/ UTC -3
     citizenship:
-    website: blog.webjeda.com #do not add http://
-    linkedin: alandoe
-    xing: alandoe
-    github: sharu725
+    website: willmayrink.github.io #do not add http://
+    linkedin: Willian Mayrink
+    xing:
+    github: willmayrink
     telegram: # add your nickname without '@' sign
     gitlab:
     bitbucket:
-    twitter: '@webjeda'
+    twitter: 
     stack-overflow: # Number/Username, e.g. 123456/alandoe
     codewars:
     goodreads: # Number-Username, e.g. 123456-alandoe
@@ -32,22 +32,19 @@ sidebar:
     languages:
       title: Languages
       info:
-        - idiom: English
+        - idiom: Portuguese
           level: Native
 
-        - idiom: French
-          level: Professional
-
-        - idiom: Spanish
-          level: Professional
+        - idiom: English
+          level: Professional, Advanced (C1)
 
     interests:
       title: Interests
       info:
-        - item: Climbing
+        - item: Gym
           link:
 
-        - item: Snowboarding
+        - item: Gaming
           link:
 
         - item: Cooking
@@ -56,11 +53,8 @@ sidebar:
 career-profile:
     title: Career Profile
     summary: |
-      Summarise your career here lorem ipsum dolor sit amet, consectetuer
-      adipiscing elit. You can [download this free resume/CV template here]().
-      Aenean commodo ligula eget dolor aenean massa. Cum sociis natoque
-      penatibus et magnis dis parturient montes, nascetur ridiculus mus.
-      Donec quam felis, ultricies nec, pellentesque eu.
+      English Instructor, Computer Technician with experience in branches of the financial, industrial sector
+      and Environmental Management Systems (ISO14001).
       Second paragraph if required.
 education:
     title: Education
