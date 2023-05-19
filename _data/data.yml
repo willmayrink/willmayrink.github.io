@@ -30,10 +30,10 @@ sidebar:
     pdf: https://willmayrink.github.io/assets/resume.pdf
 
     languages:
-      title: Languages
+      title: Línguas
       info:
-        - idiom: Portuguese
-          level: Native
+        - idiom: Português
+          level: Nativo
 
         - idiom: English
           level: Professional, Advanced (C1)
@@ -51,165 +51,70 @@ sidebar:
           link:
 
 career-profile:
-    title: Career Profile
+    title: Perfil Profissional
     summary: |
-      English Instructor, Computer Technician with experience in branches of the financial, industrial sector
-      and Environmental Management Systems (ISO14001).
-      Second paragraph if required.
+      Instrutor de Língua Inglesa, Técnico em Informática, Auditor ISO 14001:2015 e Auxiliar Financeiro.
+      Conhecimento em Desenvolvimento de Software (Java) e Administração de Bancos de Dados e Servidor Windows Server™.
 education:
     title: Education
     info:
-      - degree: MSc in Computer Science
+      - degree: Técnico em Informática
         university: University of London
-        time: 2011 - 2012
+        time: 2009 - 2011
         details: |
-          Describe your study here lorem ipsum dolor sit amet, consectetuer
-          adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum
-          sociis natoque penatibus et magnis dis parturient montes, nascetur
-          ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu,
-          pretium quis, sem.
-            - Bullet point
-            - Bullet point
-      - degree: BSc in Applied Mathematics
-        university: Bristol University
-        time: 2007 - 2011
-        details: |
-          Describe your study here lorem ipsum dolor sit amet, consectetuer
-          adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum
-          sociis natoque penatibus et magnis dis parturient montes, nascetur
-          ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu,
-          pretium quis, sem.
-            - Bullet point
-            - Bullet point
+          Curso técnico realizado entre os anos de 2009 e 2011 com formação em paralelo ao Ensino Médio com duração de 1440 horas. 
+          Voltado principalmente ao Desenvolvimento de Software com ênfase em Java™ e Bancos de Dados SQLServer™. 
+            - Desenvolvimento de Software.
+            - Manutenção de Computadores.
+            - Suporte Técnico plataforma Windows™.
 experiences:
-    title: Experiences
+    title: Experiências Profissionais
     info:
-      - role: Lead Developer
-        time: 2015 - Present
-        company: Startup Hubs, San Francisco
+      - role: Instrutor de Lingua Inglesa
+        time: Abril 2023 - Present
+        company: Aliança América Idiomas, Remoto
         details: |
-          Describe your role here lorem ipsum dolor sit amet, consectetuer
-          adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa.
-          Cum sociis natoque penatibus et magnis dis parturient montes,
-          nascetur ridiculus mus. Donec quam felis, ultricies nec,
-          pellentesque eu, pretium quis, sem. Nulla consequat massa quis
-          enim. Donec pede justo. Sed ut perspiciatis unde omnis iste natus
-          error sit voluptatem accusantium doloremque laudantium, totam rem
-          aperiam, eaque ipsa quae ab illo inventore veritatis et quasi
-          architecto beatae vitae dicta sunt explicabo.
-            - Bullet point
-            - Bullet point
-      - role: Senior Software Engineer
-        time: 2014 - 2015
-        company: Google, London
+          Responsável por lecionar a Lingua Inglesa como segundo idioma para alunos em diversas faixas etárias, desenvolver planos de aula
+          que estejam em total acordo com a efetiva necessidade de aprendizado do aluno em questão e acompanhamento do processo de aquisição
+          de uma nova língua, evitando vícios de linguagens e agregando na consolidação do idioma.
+            - Inglês como Segunda Língua.
+            - Desenvolvimento pessoal dos alunos.
+      - role: Gestor Financeiro
+        time: Fevereiro de 2020 - Fevereiro 2023
+        company: RJ de Oliveira Neto, Barra Mansa - RJ
         details: |
-          Describe your role here lorem ipsum dolor sit amet, consectetuer
-          adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa.
-          Cum sociis natoque penatibus et magnis dis parturient montes,
-          nascetur ridiculus mus. Donec quam felis, ultricies nec,
-          pellentesque eu, pretium quis, sem.
-            - Bullet point
-            - Bullet point
-      - role: UI Developer
-        time: 2012 - 2014
-        company: Amazon, London
+          Responsável por emissão de NF-e, Gestão de Contas a Pagar, Rotinas de Cobrança (incluindo elaboração de relatórios automatizados),
+          Controle de Fluxo de Caixa, Rotinas de Pagamento, criação de Relatórios Gerenciais e definição de métricas apropriadas para controle
+          real e condizente dos valores a serem pagos e recebidos.
+            - Microsoft Excel™
+            - BI (DataStudio™/Looker™)
+      - role: Técnico de Controle Operacional
+        time: 2015 - 2020
+        company: Companhia Siderurgica Nacional - CSN UPV, Volta Redonda - RJ
         details: |
-          Describe your role here lorem ipsum dolor sit amet, consectetuer
-          adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa.
-          Cum sociis natoque penatibus et magnis dis parturient montes,
-          nascetur ridiculus mus. Donec quam felis, ultricies nec,
-          pellentesque eu, pretium quis, sem.
-            - Bullet point
-            - Bullet point
-projects:
-    title: Projects
-    intro: >
-      You can list your side projects in this
-      section. Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-      Vestibulum et ligula in nunc bibendum fringilla a eu lectus.
-    assignments:
-      - title: Velocity
-        link: "#hook"
-        tagline: "A responsive website template designed to help startups promote, market and sell their products."
-
-      - title: DevStudio
-        link: "#"
-        tagline: "A responsive website template designed to help web developers/designers market their services."
-
-      - title: Tempo
-        link: "#"
-        tagline: "A responsive website template designed to help startups promote their products or services and to attract users &amp; investors"
-
-      - title: Atom
-        link: "#"
-        tagline: "A comprehensive website template solution for startups/developers to market their mobile apps."
-
-      - title: Delta
-        link: "#"
-        tagline: "A responsive Bootstrap one page theme designed to help app developers promote their mobile apps"
-
-oss:
-    title: OSS Contributions
-    intro: >
-      You can list your open source software contributions in this
-      section. Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-      Vestibulum et ligula in nunc bibendum fringilla a eu lectus.
-    contributions:
-      - title: Tempo
-        link: "#"
-        tagline: "A responsive website template designed to help startups promote their products or services and to attract users &amp; investors"
-
-      - title: Atom
-        link: "#"
-        tagline: "A comprehensive website template solution for startups/developers to market their mobile apps."
-
-      - title: Delta
-        link: "#"
-        tagline: "A responsive Bootstrap one page theme designed to help app developers promote their mobile apps"
-
-publications:
-    title: Publications
-    intro: |
-      You can list your publications in this section. Lorem ipsum dolor sit
-      amet, consectetur adipiscing elit. Vestibulum et ligula in nunc
-      bibendum fringilla a eu lectus.
-    papers:
-      - title: The Art of Computer Programming
-        link: "#"
-        authors: Donald E. Knuth
-        conference: Addison-Wesley, 1968
-
-      - title: "Genetic Programming III: Darwinian Invention &amp; Problem Solving"
-        link: "#"
-        authors: Koza, J.R., Andre, D., Bennett, F.H., Keane, M.A.
-        conference: "Morgan Kaufmann Publishers Inc., San Francisco, CA, USA, 1st edn. (1999)"
-
-      - title: A syntax directed compiler for Algol 60
-        link: "#"
-        authors: Edgar T. Irons
-        conference: "Comm. ACM 4 (1961), 51–55"
-
+          Encarregado de realizar a comunicação entre órgãos ambientais de fiscalização em uma gerência geral contendo 1400 funcionários. 
+          Sendo assim, realizando treinamentos e integrações de novos funcionários, desenvolvendo relatórios de atendimento as 
+          normas ISO:14001 2005/2015 (formação via Instituto Falcão Bauer), identificação e tratamento de não-conformidades no SGA, 
+          realizando e conduzindo auditorias internas na Gerência Geral, atuando em conjunto com setor de engenharia no desenvolvimento de desenhos técnicos da malha hídrica 
+          para fins de certificação.
+            - ISO 14001:2015
+            - Gestão Ambiental
+            - SGA
 skills:
-    title: Skills &amp; Proficiency
+    title: Skills &amp; Proficiência
 
     toolset:
-      - name: Python & Django
-        level: 98%
+      - name: Inglês como Segunda Língua
+        level: 90%
 
-      - name: Javascript & jQuery
-        level: 98%
+      - name: Java & SQL
+        level: 70%
 
-      - name: Angular
-        level: 98%
+      - name: Financeiro
+        level: 90%
 
       - name: HTML5 & CSS
-        level: 95%
-
-      - name: Ruby on Rails
-        level: 85%
-
-      - name: Sketch & Photoshop
-        level: 60%
+        level: 80%
 
 footer: >
     Designed with <i class="fas fa-heart"></i> by <a href="http://themes.3rdwavemedia.com" target="_blank" rel="nofollow">Xiaoying Riley</a>
