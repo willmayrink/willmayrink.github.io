@@ -58,7 +58,7 @@ career-profile:
 education:
     title: Educacional
     info:
-      - degree: Técnico em Informática
+      - degree: 🖥️ Técnico em Informática
         university: Escola Técnica Pandiá Calógeras - ETPC
         time: 2009 - 2011
         details: |
@@ -70,7 +70,7 @@ education:
 experiences:
     title: Experiências Profissionais
     info:
-      - role: Instrutor de Lingua Inglesa
+      - role: 📚 Instrutor de Lingua Inglesa
         time: Abril 2023 - Present
         company: Aliança América Idiomas, Remoto
         details: |
@@ -79,7 +79,7 @@ experiences:
           de uma nova língua, evitando vícios de linguagens e agregando na consolidação do idioma.
             - Inglês como Segunda Língua.
             - Desenvolvimento pessoal dos alunos.
-      - role: Gestor Financeiro
+      - role: 💵 Gestor Financeiro
         time: Fevereiro de 2020 - Fevereiro 2023
         company: RJ de Oliveira Neto, Barra Mansa - RJ
         details: |
@@ -88,7 +88,7 @@ experiences:
           real e condizente dos valores a serem pagos e recebidos.
             - Microsoft Excel™
             - BI (DataStudio™/Looker™)
-      - role: Técnico de Controle Operacional
+      - role: 🌎 Técnico de Controle Operacional
         time: 2015 - 2020
         company: Companhia Siderurgica Nacional - CSN UPV, Volta Redonda - RJ
         details: |
