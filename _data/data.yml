@@ -39,7 +39,7 @@ sidebar:
           level: Professional, Advanced (C1)
 
     interests:
-      title: Interests
+      title: Atividades
       info:
         - item: 🥊  Gym
           link:
@@ -56,7 +56,7 @@ career-profile:
       Instrutor de Língua Inglesa, Técnico em Informática, Auditor ISO 14001:2015 e Auxiliar Financeiro.
       Conhecimento em Desenvolvimento de Software (Java) e Administração de Bancos de Dados e Servidor Windows Server™.
 education:
-    title: Education
+    title: Educacional
     info:
       - degree: Técnico em Informática
         university: Escola Técnica Pandiá Calógeras - ETPC
