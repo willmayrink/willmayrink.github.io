@@ -54,7 +54,7 @@ career-profile:
     title: Perfil Profissional
     summary: |
       Instrutor de Língua Inglesa, Técnico em Informática, Auditor ISO 14001:2015 e Auxiliar Financeiro.
-      Conhecimento em Desenvolvimento de Software (Java) e Administração de Bancos de Dados e Servidor Windows Server™.
+      Conhecimento em Desenvolvimento de Software (Java) e Administração de Bancos de Dados e Servidores Windows Server™.
 education:
     title: Educacional
     info:
@@ -117,4 +117,4 @@ skills:
         level: 80%
 
 footer: >
-    Designed with <i class="fas fa-heart"></i> by <a href="http://themes.3rdwavemedia.com" target="_blank" rel="nofollow">Xiaoying Riley</a>
+    Willian Mayrink <i class="fa-solid fa-ghost" style="color: #000000;"></i>  <a href="http://themes.3rdwavemedia.com" target="_blank" rel="nofollow">Online CV</a>
