@@ -1,20 +1,60 @@
----
-layout: default
----
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
 
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Will Mayrink</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-SgOJa3DmI69IUzQ2PVdRZhwQ+dy64/BUtbMJw1MZ8t5HZApcHrRKUc4W0kG879m7" crossorigin="anonymous">
+</head>
 
-{% include career-profile.html %}
+<body>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-k6d4wzSIapyDyv1kpU366/PK5hCdSbCRGRCMv+eplOQJWyd1fbcAu9OCUj5zNLiq"
+        crossorigin="anonymous"></script>
 
-{% unless site.data.data.sidebar.education %}
-  {% include education.html %}
-{% endunless %}
+    <nav class="navbar navbar-expand-lg bg-body-tertiary shadow-lg">
+        <div class="container-fluid">
+            <a href="#" class="navbar-brand"><img height="32" width="32"
+                    src="https://cdn.simpleicons.org/refinedgithub/white" style="vertical-align: middle;" /><span
+                    class="badge ms-1" style="vertical-align: middle;"> / willmayrink</span></a>
+            <div class="d-flex justify-content-end" style="vertical-align: middle;">
+                <a href=""><img class="me-3" height="24" width="24" src="https://cdn.simpleicons.org/telegram"
+                        style="vertical-align: middle;" /></a>
+                <a href=""><img class="me-3" height="24" width="24" src="https://cdn.simpleicons.org/whatsapp"
+                        style="vertical-align: middle;" /></a>
+                <a href=""><img class="me-3" height="24" width="24" src="https://cdn.simpleicons.org/discord/white"
+                        style="vertical-align: middle;" /></a>
+            </div>
+        </div>
+    </nav>
+    <div class="container-fluid">
+        <div class="d-flex justify-content-center mt-5">
+            <img src="img/profile.gif" class="shadow shadow-lg" alt="" width="150" height="150"
+                style="border-radius:100%;object-fit: cover;">
+            <h1 class="display-2 ms-5 mt-4">Hello.</h1>
+        </div>
+        <div class="d-flex justify-content-center">
+        </div>
+        <div class="d-flex justify-content-center mt-5">
+            <p class="badge fs-6 fs-light">These are my metrics.</p>
+        </div>
+        <hr class="border border-light mb-0" style="width: 50%; margin: auto; height: 1px;opacity: 0.05;">
+        <div class="pt-5" style="width: 50%; margin: auto;">
+            <span class="fs-4 badge">📟</span><span class="badge fs-6">Languages</span>
+        </div>
+        <div class="d-flex justify-content-center pt-5">
+            <img src="img/github-metrics.svg" alt="">
+        </div>
+        <hr class="border border-light mt-3" style="width: 50%; margin: auto; height: 1px;opacity: 0.05;">
+        <div class="pt-5" style="width: 50%; margin: auto;">
+            <span class="fs-5 badge">⭐</span><span class="badge fs-6">Featured Repository</span>
+        </div>
+        <div class="d-flex justify-content-center pt-5">
+            <img src="img/metrics-repo.svg" alt="">
+        </div>
+    </div>
+</body>
 
-{% include experiences.html %}
-
-{% include projects.html %}
-
-{% include oss-contributions.html %}
-
-{% include publications.html %}
-
-{% include skills.html %}
+</html>

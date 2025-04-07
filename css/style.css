@@ -1,0 +1,32 @@
+body {
+    background: linear-gradient(#8E2DE2, #4A00E0);
+    background-attachment: fixed;
+    background-size: cover;
+    background-repeat: no-repeat;
+    font-family: 'Montserrat', sans-serif;
+}
+
+.container-gradient {
+    background: linear-gradient(to right, #8E2DE2, #4A00E0);
+}
+
+.custom-indigo {
+    color: #8E2DE2;
+}
+
+.custom-bg-indigo {
+    background: #8E2DE2;
+}
+
+.custom-indigo-gradient {
+    background: -webkit-linear-gradient(#8E2DE2, #4A00E0);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.card:hover {
+    transition: 0.7s;
+    transform: translateY(-40px);
+    position: absolute;
+
+}
