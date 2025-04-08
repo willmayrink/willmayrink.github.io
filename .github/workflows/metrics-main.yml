@@ -32,11 +32,11 @@ jobs:
           base_hireable: true
           base: ""
           config_timezone: America/Sao_Paulo
-          plugin_leetcode_user: willmayrink
-          plugin_leetcode_sections: solved, skills
-         # plugin_achievements: yes
-         # plugin_achievements_display: compact
-         # plugin_achievements_secrets: yes
+          #plugin_leetcode_user: willmayrink
+          #plugin_leetcode_sections: solved, skills
+          #plugin_achievements: yes
+          #plugin_achievements_display: compact
+          #plugin_achievements_secrets: yes
           filename: img/metrics/github-metrics.svg
           plugin_languages: true
           plugin_languages_ignored: ruby, coffeescript
