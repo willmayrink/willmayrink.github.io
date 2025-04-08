@@ -28,7 +28,7 @@ jobs:
 
           # Options
           user: willmayrink
-          template: terminal
+          template: classic
           base_hireable: true
           base: header, metadata
           config_timezone: America/Sao_Paulo
