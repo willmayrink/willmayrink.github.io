@@ -30,7 +30,7 @@ jobs:
           user: willmayrink
           template: terminal
           base_hireable: true
-          base: ""
+          base: header, metadata
           config_timezone: America/Sao_Paulo
           #plugin_leetcode_user: willmayrink
           #plugin_leetcode_sections: solved, skills
