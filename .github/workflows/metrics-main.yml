@@ -28,7 +28,7 @@ jobs:
 
           # Options
           user: willmayrink
-          template: classic
+          template: terminal
           base_hireable: true
           base: ""
           config_timezone: America/Sao_Paulo
@@ -40,7 +40,6 @@ jobs:
           filename: img/metrics/github-metrics.svg
           plugin_languages: true
           plugin_languages_ignored: ruby, coffeescript
-          plugin_leetcode: yes
           plugin_topics: yes
           plugin_topics_mode: icons
          
