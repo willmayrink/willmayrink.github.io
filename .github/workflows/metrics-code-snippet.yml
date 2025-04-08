@@ -30,11 +30,10 @@ jobs:
           user: willmayrink
           filename: img/metrics/metrics-code-snippet.svg
           base: ""
-          config_timeezone: America/Sao_Paulo
           name: HTML or CSS snippet of the day
           plugin_code: yes
-          plugin_code_languages: html, css
-          plugin_code_load: 400
+          plugin_code_languages: html, css, javascript, java, ruby
+          plugin_code_load: 999
 
           
           
