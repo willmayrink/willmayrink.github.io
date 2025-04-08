@@ -28,7 +28,7 @@ jobs:
 
           # Options
           user: willmayrink
-          filename: img/metrics/metrics-habits.svg
+          filename: img/metrics/metrics-wakatime.svg
           base: ""
           config_timeezone: America/Sao_Paulo
           plugin_wakatime: yes
