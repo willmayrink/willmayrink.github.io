@@ -1,0 +1,39 @@
+# Visit https://github.com/lowlighter/metrics#-documentation for full reference
+name: metrics_music
+on:
+  # Schedule updates (each hour)
+  schedule: [{cron: "0 * * * *"}]
+  # Lines below let you run workflow manually and on each commit
+  workflow_dispatch:
+  push: {branches: ["master", "main"]}
+jobs:
+  github-metrics:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: lowlighter/metrics@latest
+        with:
+          # Your GitHub token
+          # The following scopes are required:
+          #  - public_access (default scope)
+          #  - public_repo
+          #  - read:project
+          # The following additional scopes may be required:
+          #  - read:org      (for organization related metrics)
+          #  - read:user     (for user related data)
+          #  - read:packages (for some packages related data)
+          #  - repo          (optional, if you want to include private repositories)
+          token: ${{ secrets.METRICS_TOKEN }}
+
+          # Options
+          user: willmayrink
+          filename: img/metrics/metrics-music.svg
+          base: ""
+          plugin_music: true
+          plugin_music_provider: youtube
+          #plugin_music_playlist: https://music.youtube.com/playlist?list=PL8ZsK6-DPL5cZq4Eq7-NTvdUwN9qKxbUV
+          plugin_music_playlist: >-
+            https://music.youtube.com/playlist?list=PL8ZsK6-DPL5cZq4Eq7-NTvdUwN9qKxbUV
+          
+          
