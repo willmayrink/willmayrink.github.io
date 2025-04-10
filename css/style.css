@@ -1,3 +1,13 @@
 body{
     font-family: 'Roboto', sans-serif;
 }
+.vertical-mid{
+    vertical-align: middle;
+    text-align: center;
+}
+.circle-img{
+    border-radius:100%;
+    object-fit: cover;;
+    width: 32px;
+    height: 32px;;
+}
