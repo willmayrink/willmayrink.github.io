@@ -15,3 +15,10 @@ body{
 html{
     scroll-behavior: smooth;
 }
+
+.monster-logo:hover{
+    transform:scale(1.6);
+    transition:all 0.5s ease-in-out;
+    padding-left: .25rem;
+    
+}
