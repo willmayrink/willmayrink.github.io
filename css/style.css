@@ -11,3 +11,7 @@ body{
     width: 32px;
     height: 32px;;
 }
+
+html{
+    scroll-behavior: smooth;
+}
