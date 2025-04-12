@@ -11,5 +11,5 @@
 > **Entre em contato por mensagem no [`Discord`](https://discordapp.com/users/216675974249578497)**
 
 ### PageSpeed Insight 💹
-> ![Screenshot](img/preview.png)
+> ![Screenshot](img/preview.webp)
 
