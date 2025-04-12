@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="480" height="234" class="">
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="250" class="">
     <defs>
         <style/>
     </defs>
@@ -74,7 +74,7 @@
                                         <span>created 20 hours ago</span>
                                     </div>
                                 </div>
-                                <div class="field description">This will be a XMLReader for NFe's where user can visualize and keep track of billings assigned to the company.</div>
+                                <div class="field description">XMLReader for NFe's where user can visualize and keep track of billings assigned to the company. It's based on Brazilian NFe System (refeer to SEFAZ docs)</div>
                                 <div class="field infos">
                                     <div class="language">
                                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16">
