@@ -28,7 +28,7 @@ jobs:
 
           # Options
           user: willmayrink
-          filename: img/metrics/metrics-music.svg
+          filename: img/metrics/metrics-pagespeed.svg
           base: ""
           plugin_pagespeed: yes
           plugin_pagespeed_token: ${{ secrets.PAGESPEED_TOKEN }}
