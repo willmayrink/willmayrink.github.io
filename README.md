@@ -11,5 +11,17 @@
 > **Entre em contato por mensagem no [`Discord`](https://discordapp.com/users/216675974249578497)**
 
 ### PageSpeed Insight 💹
+
+> [!IMPORTANT]
+> Estou tentando melhorar o score das páginas através de ajustes de boas práticas e principalmente ajuste de arquivos e visualizações; assim como algumas tags sendo renderizadas com um certo delay.
+
+_`08/04/2025`_
+
 > ![Screenshot](img/preview.webp)
+
+---
+
+`13/04/2025` [`🔗`](https://pagespeed.web.dev/analysis/https-willmayrink-github-io/r4wzsi6j29?form_factor=desktop)
+
+> ![Screenshot](img/preview2.webp)
 
