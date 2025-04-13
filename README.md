@@ -10,7 +10,13 @@
 > _Responderei dúvidas caso esteja na dúvida entre erro de código ou funcionalidade fora do ar._\
 > **Entre em contato por mensagem no [`Discord`](https://discordapp.com/users/216675974249578497)**
 
+---
+
 ### PageSpeed Insight 💹
+[_`@lowlighter`_](https://github.com/lowlighter)
+
+![](img/metrics/metrics-pagespeed.svg)
+
 
 > [!TIP]
 > Estou tentando melhorar o score das páginas através de ajustes de boas práticas e principalmente ajuste de arquivos e visualizações; assim como algumas tags sendo renderizadas com um certo delay.
