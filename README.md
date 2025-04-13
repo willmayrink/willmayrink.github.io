@@ -12,7 +12,7 @@
 
 ### PageSpeed Insight 💹
 
-> [!IMPORTANT]
+> [!TIP]
 > Estou tentando melhorar o score das páginas através de ajustes de boas práticas e principalmente ajuste de arquivos e visualizações; assim como algumas tags sendo renderizadas com um certo delay.
 
 _`08/04/2025`_
