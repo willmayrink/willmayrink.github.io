@@ -29,10 +29,10 @@ jobs:
           # Options
           user: willmayrink
           filename: img/metrics/metrics-codechanged.svg
-          base: ""
+          base: repositories
           plugin_pagespeed_token: ${{ secrets.PAGESPEED_TOKEN }}
           plugin_lines: yes
           plugin_lines_repository_limit: 2
-          plugin_lines_delay: 1
+          
           #repositories_skipped: +lowlighter/metrics
           
