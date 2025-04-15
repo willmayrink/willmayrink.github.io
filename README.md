@@ -1,33 +1,23 @@
 # Seja bem vindo! 🫶
 
-> Esta é minha página no Github Pages. Ela é totalmente baseada em estatística derivadas do **[`@lowlighter`](https://github.com/lowlighter)**.
- 
-> [!IMPORTANT]
-> Utilize os códigos fonte à vontade, porém aconselho se basear sempre no **[`branch:main`](https://github.com/lowlighter/metrics)** do próprio desenvolvedor. 
+> Este repositório foi criado para documentar meu aprendizado e prática com o framework Spring Boot. Aqui você encontrará exemplos, tutoriais e anotações sobre os principais conceitos e funcionalidades do Spring Boot.
 
-> [!WARNING]
-> Se atente apenas à área de [`issues`](https://github.com/lowlighter/metrics/issues) para conferir funcionalidades que estão passando por instabilidade.
-> _Responderei dúvidas caso esteja na dúvida entre erro de código ou funcionalidade fora do ar._\
-> **Entre em contato por mensagem no [`Discord`](https://discordapp.com/users/216675974249578497)**
+> [!NOTE]  
+> Sinta-se à vontade para utilizar os códigos fonte deste repositório. Recomendo sempre consultar a [_documentação oficial do Spring Boot_](https://spring.io/projects/spring-boot) para referências atualizadas.
 
----
-
-### PageSpeed Insight 💹
-[_`@lowlighter`_](https://github.com/lowlighter)
-
-![](img/metrics/metrics-pagespeed.svg)
-
-
-> [!TIP]
-> Estou tentando melhorar o score das páginas através de ajustes de boas práticas e principalmente ajuste de arquivos e visualizações; assim como algumas tags sendo renderizadas com um certo delay.
-
-_`08/04/2025`_
-
-> ![Screenshot](img/preview.webp)
+> [!CAUTION]  
+> Caso encontre algum problema ou erro nos códigos, verifique a seção de `issues` para reportar ou buscar soluções.  
+> **Responderei dúvidas relacionadas a erros de código ou funcionalidades específicas.**  
 
 ---
 
-`13/04/2025` [`🔗`](https://pagespeed.web.dev/analysis/https-willmayrink-github-io/r4wzsi6j29?form_factor=desktop)
+### Sobre o Projeto 📚
 
-> ![Screenshot](img/preview2.webp)
+Este repositório conterá exemplos práticos e anotações de estudo sobre o `SpringBoot`, incluindo:
 
+- [x] Configurações iniciais
+- [ ] Criação de APIs REST
+- [ ] Integração com bancos de dados
+- [ ] Uso de Spring Data JPA
+- [ ] Autenticação e autorização com Spring Security
+- [ ] Testes unitários e de integração
