@@ -36,7 +36,7 @@ jobs:
           plugin_code_languages: html, css, javascript, java
           plugin_code_lines: 6
           plugin_code_load: 400
-          plugin_code_visibility: public
+          plugin_code_visibility: all
           
 
           
