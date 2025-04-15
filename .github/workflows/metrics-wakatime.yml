@@ -34,7 +34,7 @@ jobs:
           plugin_wakatime: yes
           plugin_wakatime_sections: time, projects, languages, editors, os
           plugin_wakatime_token: ${{ secrets.WAKATIME_TOKEN }}
-          plugin_wakatime_languages_ignored: html
+          plugin_wakatime_languages_ignored: html, markdown
           
           
           
