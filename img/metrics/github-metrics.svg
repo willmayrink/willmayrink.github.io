@@ -71,10 +71,10 @@
                         <rect x="0" y="0" width="460" height="8" fill="white" rx="5"/>
                     </mask>
                     <rect mask="url(#languages-bar)" x="0" y="0" width="0" height="8" fill="#d1d5da"/>
-                    <rect mask="url(#languages-bar)" x="0" y="0" width="261.27299750039407" height="8" fill="#b07219"/>
-                    <rect mask="url(#languages-bar)" x="261.27299750039407" y="0" width="181.0653725763956" height="8" fill="#e34c26"/>
-                    <rect mask="url(#languages-bar)" x="442.33837007678966" y="0" width="16.605039745985994" height="8" fill="#663399"/>
-                    <rect mask="url(#languages-bar)" x="458.94340982277566" y="0" width="1.0565901772243116" height="8" fill="#f1e05a"/>
+                    <rect mask="url(#languages-bar)" x="0" y="0" width="261.24946522258" height="8" fill="#b07219"/>
+                    <rect mask="url(#languages-bar)" x="261.24946522258" y="0" width="181.09049559793743" height="8" fill="#e34c26"/>
+                    <rect mask="url(#languages-bar)" x="442.33996082051743" y="0" width="16.603544166985657" height="8" fill="#663399"/>
+                    <rect mask="url(#languages-bar)" x="458.9435049875031" y="0" width="1.056495012496904" height="8" fill="#f1e05a"/>
                 </svg>
                 <div class="field center horizontal-wrap fill-width">
                     <div class="field center no-wrap language">
@@ -130,7 +130,7 @@
             </section>
             <footer>
                 <span>These metrics include private contributions</span>
-                <span>Last updated 30 Apr 2025, 15:22:22 (timezone America/Sao_Paulo) with lowlighter/metrics@3.34.0</span>
+                <span>Last updated 30 Apr 2025, 16:13:02 (timezone America/Sao_Paulo) with lowlighter/metrics@3.34.0</span>
             </footer>
         </div>
         <div xmlns="http://www.w3.org/1999/xhtml" id="metrics-end"></div>
