@@ -31,7 +31,7 @@ jobs:
           filename: img/metrics/metrics-recent-activity.svg
           base: ""
           plugin_activity: yes
-          plugin_activity_limit: 8
+          plugin_activity_limit: 4
           plugin_activity_days: 365
           plugin_activity_filter: issue, pr, release, push, comment
           
