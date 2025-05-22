@@ -34,5 +34,5 @@ jobs:
           plugin_activity_limit: 4
           plugin_activity_days: 365
           plugin_activity_ignored: willmayrink.github.io, willmayrink
-          plugin_activity_filter: issue, pr, release, push, comment
+          plugin_activity_filter: issue, comment
           
