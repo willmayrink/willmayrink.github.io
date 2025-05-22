@@ -16,13 +16,29 @@ html{
     scroll-behavior: smooth;
 }
 
-.monster-logo:hover{
-    transform:scale(1.6);
-    transition:all 0.5s ease-in-out;
-    padding-left: .25rem;
-    
-}
+
 .text-footer{
     font-size:12px;
     
+}
+
+.blurred-bg{
+    backdrop-filter: blur(400px);
+    border:50px;
+    border-color: rgba(179, 179, 179, 1);
+    border-radius:50px;
+    background: linear-gradient(90deg, rgba(79, 79, 179, 0.1) 0%, rgba(79, 179, 179, 0.1))
+}
+.steam-card{
+    backdrop-filter: blur(40px);
+    background: linear-gradient(180deg, rgba(72, 85, 99, 1) 0%, rgba(41, 50, 60, 1));
+}
+.steam-badges{
+    height: 36px;
+    width: 36px;
+    vertical-align: middle;
+}
+
+.bg-indigo {
+    background-color: var(--bs-indigo);
 }
