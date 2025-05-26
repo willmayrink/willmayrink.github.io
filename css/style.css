@@ -30,8 +30,11 @@ html{
     background: linear-gradient(90deg, rgba(79, 79, 179, 0.1) 0%, rgba(79, 179, 179, 0.1))
 }
 .steam-card{
-    backdrop-filter: blur(40px);
-    background: linear-gradient(180deg, rgba(72, 85, 99, 1) 0%, rgba(41, 50, 60, 1));
+    backdrop-filter: blur(400px);
+    border:50px;
+    border-color: rgba(179, 179, 179, 1);
+    border-radius:50px;
+    background: linear-gradient(180deg, rgba(127, 0, 255, 0.3) 0%, rgba(225, 0, 255, 0.3))
 }
 .steam-badges{
     height: 36px;
