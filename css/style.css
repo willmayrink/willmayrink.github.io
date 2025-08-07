@@ -26,7 +26,7 @@ html{
     backdrop-filter: blur(400px);
     border:50px;
     border-color: rgba(179, 179, 179, 1);
-    border-radius:50px;
+    border-radius:40px;
     background: linear-gradient(90deg, rgba(79, 79, 179, 0.1) 0%, rgba(79, 179, 179, 0.1))
 }
 .steam-card{
