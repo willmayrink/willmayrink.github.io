@@ -31,6 +31,6 @@ jobs:
           filename: img/metrics/metrics-repo.svg
           base: ""
           plugin_repositories: true
-          plugin_repositories_featured: EnvioNFe, Zomboid, SteamWorkshopFetcher
+          plugin_repositories_featured: EnvioNFe, RadioStationsExpanded, SteamWorkshopFetcher
           
           
