@@ -24,7 +24,7 @@
                                     </svg>
                                     <div class="name">
                                         <span>willmayrink/LocalizaCNPJ</span>
-                                        <span>created 18 days ago</span>
+                                        <span>created 19 days ago</span>
                                     </div>
                                 </div>
                                 <div class="field description">LocalizaCNPJ is a Java GUI application that queries Brazilian CNPJ data via BrasilAPI, retrieving details such as company name, opening date, address, and postal code. Developed with JDK 24, Maven, and FlatLaf for a clean interface, it includes error handling and real-time data access. 🇧🇷🔍</div>
