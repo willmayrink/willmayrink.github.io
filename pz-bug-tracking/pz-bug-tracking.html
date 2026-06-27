@@ -884,7 +884,7 @@
 
       <p><b>May 15 — Persistence across versions.</b> Crashes still present in PZ 42.19, ruling out a single-build regression.</p>
 
-      <p><b>Jun 2 — Loading trigger identified.</b> Crashes strongly correlated with world loading: if the game survived initial world init, crashes only occurred when loading previously unseen chunks. Cross-referenced across affected users: Kolopis, SemaGD.</p>
+      <p><b>Jun 2 — Loading trigger identified.</b> Crashes strongly correlated with world loading: if the game survived initial world init, crashes only occurred when loading previously unseen chunks. Cross-referenced across affected users: Kolopis, SemaGD, Beard.</p>
 
       <h4>Logs — Phase 0</h4>
       <ul class="log-list">
@@ -1377,7 +1377,7 @@ Child-SP          RetAddr           Call Site
           </tr>
           <tr>
             <td>Kolopis</td>
-            <td>AMD</td>
+            <td>Unknown</td>
             <td>19045</td>
             <td>19041</td>
             <td>Still crashed</td>
@@ -1582,8 +1582,8 @@ Child-SP          RetAddr           Call Site
             <span>Participated consistently through multiple test iterations across different allocator and GC configurations. His continued crashes under <code>allocator=system</code> were precisely the kind of negative result that kept the investigation honest and prevented a premature conclusion.</span>
           </li>
           <li>
-            <span class="ack-handle tis">Beard (TIS)</span>
-            <span>Early engagement from TIS side that helped establish the scope of the issue across different systems in Phase 0.</span>
+            <span class="ack-handle">Beard</span>
+            <span>Early crash data contributor who helped establish the scope of the issue across different systems in Phase 0.</span>
           </li>
           <li>
             <span class="ack-handle tis">Ash (TIS)</span>
@@ -1691,15 +1691,7 @@ gflags /p /disable java.exe</pre>
 ├── ProjectZomboid64-nojemalloc-debug.bat
 └── ProjectZomboid64-nojemalloc-debug-full-log.bat</pre>
       </div>
-      <div class="appendix-block" id="appendix-gc">
-        <div class="ab-title">E - .bat files</div>
-        <pre>
-          ~\bats\
-              ├── <span class="tag green">ProjectZomboid64-nojemalloc.bat</span>
-              ├── <span class="tag green">ProjectZomboid64-nojemalloc-debug.bat</span>
-              └── <span class="tag green">ProjectZomboid64-nojemalloc-debug-full-log.bat</span>
-        </pre>
-      </div>
+
     </div>
   </section>
 
