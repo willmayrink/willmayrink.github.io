@@ -884,7 +884,7 @@
 
       <p><b>May 15 — Persistence across versions.</b> Crashes still present in PZ 42.19, ruling out a single-build regression.</p>
 
-      <p><b>Jun 2 — Loading trigger identified.</b> Crashes strongly correlated with world loading: if the game survived initial world init, crashes only occurred when loading previously unseen chunks. Cross-referenced across affected users: Kolopis, SemaGD.</p>
+      <p><b>Jun 2 — Loading trigger identified.</b> Crashes strongly correlated with world loading: if the game survived initial world init, crashes only occurred when loading previously unseen chunks. Cross-referenced across affected users: Kolopis, SemaGD, Beard.</p>
 
       <h4>Logs — Phase 0</h4>
       <ul class="log-list">
@@ -1377,7 +1377,7 @@ Child-SP          RetAddr           Call Site
           </tr>
           <tr>
             <td>Kolopis</td>
-            <td>AMD</td>
+            <td>Unknown</td>
             <td>19045</td>
             <td>19041</td>
             <td>Still crashed</td>
@@ -1431,7 +1431,7 @@ Child-SP          RetAddr           Call Site
       <table>
         <tbody>
           <tr><td><code>ProjectZomboid64-nojemalloc-debug-full-log.bat</code></td><td>Main tracking script — allocator override, debug logging, crash dumps, GC logs, WER LocalDumps</td></tr>
-          <tr><td>Log location</td><td><code>D:\SteamLibrary\steamapps\common\ProjectZomboid\.crashes-tracking\</code></td></tr>
+          <tr><td>Log location</td><td><code>~\ProjectZomboid\.crashes-tracking\</code></td></tr>
           <tr><td>Minidumps</td><td><code>.crashes-tracking\dumps\</code></td></tr>
         </tbody>
       </table>
@@ -1664,9 +1664,21 @@ gflags /p
 gflags /p /disable java.exe</pre>
       </div>
 
+      <div class="appendix-block" id="appendix-bats">
+        <div class="ab-title">.bat files</div>
+        <pre><span class="comment"># Disable jemalloc</span>
+<a href="https://github.com/willmayrink/willmayrink.github.io/blob/413d41d9caecbe8e3d6d6101ed2a276bf7df5a5a/pz-bug-tracking/bats/ProjectZomboid64-nojemalloc.bat" class="href"><span class="tag blue">ProjectZomboid64-nojemalloc.bat</a>
+
+<span class="comment"># Disable jemalloc and enables full logging </span>
+<a href="https://github.com/willmayrink/willmayrink.github.io/blob/413d41d9caecbe8e3d6d6101ed2a276bf7df5a5a/pz-bug-tracking/bats/ProjectZomboid64-nojemalloc-debug-full-log.bat" class="href"><span class="tag yellow">ProjectZomboid64-nojemalloc-debug-full-log.bat</a>
+<span class="comment"># Logs at: ~\ProjectZomboid\.crashes-tracking\</span>
+
+
+      </div>
+
       <div class="appendix-block" id="appendix-directory" style="grid-column: 1 / -1;">
         <div class="ab-title">D — Directory Structure</div>
-        <pre>D:\SteamLibrary\steamapps\common\ProjectZomboid\
+        <pre>~\ProjectZomboid\
 ├── .crashes-tracking\
 │   ├── lwjgl_-06-2026_13-01.log          (4 KB)    Early log, no allocator override
 │   ├── lwjgl_-06-2026_13-15.log          (614 KB)  allocator=system + DebugAll, system specs
@@ -1691,15 +1703,7 @@ gflags /p /disable java.exe</pre>
 ├── ProjectZomboid64-nojemalloc-debug.bat
 └── ProjectZomboid64-nojemalloc-debug-full-log.bat</pre>
       </div>
-      <div class="appendix-block" id="appendix-gc">
-        <div class="ab-title">E - .bat files</div>
-        <pre>
-          ~\bats\
-              ├── <span class="tag green">ProjectZomboid64-nojemalloc.bat</span>
-              ├── <span class="tag green">ProjectZomboid64-nojemalloc-debug.bat</span>
-              └── <span class="tag green">ProjectZomboid64-nojemalloc-debug-full-log.bat</span>
-        </pre>
-      </div>
+
     </div>
   </section>
 
