@@ -1,0 +1,81 @@
+[2026-06-26T13:39:40.581-0300][0.009s][15444][16248][info][gc,init] Initializing The Z Garbage Collector
+[2026-06-26T13:39:40.581-0300][0.009s][15444][16248][info][gc,init] Version: 25.0.1+8-LTS (release)
+[2026-06-26T13:39:40.581-0300][0.009s][15444][16248][info][gc,init] NUMA Support: Disabled
+[2026-06-26T13:39:40.581-0300][0.009s][15444][16248][info][gc,init] CPUs: 12 total, 12 available
+[2026-06-26T13:39:40.581-0300][0.009s][15444][16248][info][gc,init] Memory: 32693M
+[2026-06-26T13:39:40.581-0300][0.009s][15444][16248][info][gc,init] Large Page Support: Disabled
+[2026-06-26T13:39:40.581-0300][0.009s][15444][16248][info][gc,init] Address Space Size: limited (137434287384K)
+[2026-06-26T13:39:40.581-0300][0.009s][15444][16248][info][gc,init] Reserved Space Type: Contiguous/Unrestricted/Complete
+[2026-06-26T13:39:40.581-0300][0.009s][15444][16248][info][gc,init] Reserved Space Size: 48G
+[2026-06-26T13:39:40.581-0300][0.010s][15444][16248][info][gc,init] Min Capacity: 8M
+[2026-06-26T13:39:40.581-0300][0.010s][15444][16248][info][gc,init] Initial Capacity: 512M
+[2026-06-26T13:39:40.581-0300][0.010s][15444][16248][info][gc,init] Max Capacity: 3072M
+[2026-06-26T13:39:40.581-0300][0.010s][15444][16248][info][gc,init] Soft Max Capacity: 3072M
+[2026-06-26T13:39:40.581-0300][0.010s][15444][16248][info][gc,init] Page Size Medium: Range [4M, 32M]
+[2026-06-26T13:39:40.581-0300][0.010s][15444][16248][info][gc,init] Pre-touch: Disabled
+[2026-06-26T13:39:40.581-0300][0.010s][15444][16248][info][gc,init] Uncommit: Enabled
+[2026-06-26T13:39:40.581-0300][0.010s][15444][16248][info][gc,init] Uncommit Delay: 300s
+[2026-06-26T13:39:40.581-0300][0.010s][15444][16248][info][gc,init] GC Workers for Old Generation: 3 (dynamic)
+[2026-06-26T13:39:40.581-0300][0.010s][15444][16248][info][gc,init] GC Workers for Young Generation: 3 (dynamic)
+[2026-06-26T13:39:40.581-0300][0.019s][15444][16248][info][gc,init] GC Workers Max: 3 (dynamic)
+[2026-06-26T13:39:40.581-0300][0.019s][15444][16248][info][gc,init] Runtime Workers: 8
+[2026-06-26T13:39:40.581-0300][0.019s][15444][16248][info][gc     ] Using The Z Garbage Collector
+[2026-06-26T13:39:40.597-0300][0.025s][15444][16248][info][gc,metaspace] CDS archive(s) mapped at: [0x0000000092000000-0x0000000092d20000-0x0000000092d20000), size 13762560, SharedBaseAddress: 0x0000000092000000, ArchiveRelocationMode: 1.
+[2026-06-26T13:39:40.597-0300][0.025s][15444][16248][info][gc,metaspace] Compressed class space mapped at: 0x0000000093000000-0x00000000d3000000, reserved size: 1073741824
+[2026-06-26T13:39:40.597-0300][0.025s][15444][16248][info][gc,metaspace] UseCompressedClassPointers 1, UseCompactObjectHeaders 0
+[2026-06-26T13:39:40.597-0300][0.025s][15444][16248][info][gc,metaspace] Narrow klass pointer bits 32, Max shift 3
+[2026-06-26T13:39:40.597-0300][0.025s][15444][16248][info][gc,metaspace] Narrow klass base: 0x0000000092000000, Narrow klass shift: 0
+[2026-06-26T13:39:40.597-0300][0.025s][15444][16248][info][gc,metaspace] Encoding Range: [0x0000000092000000 - 0x0000000192000000), (4294967296 bytes)
+[2026-06-26T13:39:40.597-0300][0.025s][15444][16248][info][gc,metaspace] Klass Range:    [0x0000000092010000 - 0x00000000d3000000), (1090453504 bytes)
+[2026-06-26T13:39:40.597-0300][0.025s][15444][16248][info][gc,metaspace] Klass ID Range:  [65536 - 1090519033) (1090453497)
+[2026-06-26T13:39:40.597-0300][0.025s][15444][16248][info][gc,metaspace] Protection zone: [0x0000000092000000 - 0x0000000092010000), (65536 bytes)
+[2026-06-26T13:39:42.866-0300][2.290s][15444][16128][info][gc          ] GC(0) Major Collection (Metadata GC Threshold)
+[2026-06-26T13:39:42.867-0300][2.291s][15444][16128][info][gc,task     ] GC(0) Using 1 Workers for Young Generation
+[2026-06-26T13:39:42.867-0300][2.291s][15444][16128][info][gc,task     ] GC(0) Using 1 Workers for Old Generation
+[2026-06-26T13:39:42.869-0300][2.294s][15444][16128][info][gc,phases   ] GC(0) Y: Young Generation
+[2026-06-26T13:39:42.874-0300][2.298s][15444][976  ][info][gc,phases   ] GC(0) Y: Pause Mark Start (Major) 1.004ms
+[2026-06-26T13:39:42.893-0300][2.316s][15444][16128][info][gc,phases   ] GC(0) Y: Concurrent Mark 18.925ms
+[2026-06-26T13:39:42.894-0300][2.318s][15444][976  ][info][gc,phases   ] GC(0) Y: Pause Mark End 1.000ms
+[2026-06-26T13:39:42.894-0300][2.318s][15444][16128][info][gc,phases   ] GC(0) Y: Concurrent Mark Free 0.002ms
+[2026-06-26T13:39:42.894-0300][2.318s][15444][16128][info][gc,phases   ] GC(0) Y: Concurrent Reset Relocation Set 0.000ms
+[2026-06-26T13:39:42.895-0300][2.319s][15444][16128][info][gc,reloc    ] GC(0) Y: Using tenuring threshold: 1 (Computed)
+[2026-06-26T13:39:42.895-0300][2.319s][15444][16128][info][gc,phases   ] GC(0) Y: Concurrent Select Relocation Set 1.467ms
+[2026-06-26T13:39:42.895-0300][2.319s][15444][976  ][info][gc,phases   ] GC(0) Y: Pause Relocate Start 0.007ms
+[2026-06-26T13:39:42.904-0300][2.328s][15444][16128][info][gc,phases   ] GC(0) Y: Concurrent Relocate 8.657ms
+[2026-06-26T13:39:42.904-0300][2.328s][15444][16128][info][gc,alloc    ] GC(0) Y:                         Mark Start        Mark End      Relocate Start    Relocate End   
+[2026-06-26T13:39:42.904-0300][2.328s][15444][16128][info][gc,alloc    ] GC(0) Y: Allocation Stalls:          0                0                0                0         
+[2026-06-26T13:39:42.904-0300][2.328s][15444][16128][info][gc,load     ] GC(0) Y: Load: 0.00 (0%) / 0.00 (0%) / 0.00 (0%)
+[2026-06-26T13:39:42.905-0300][2.329s][15444][16128][info][gc,mmu      ] GC(0) Y: MMU: 2ms/49.8%, 5ms/79.9%, 10ms/89.9%, 20ms/95.0%, 50ms/96.0%, 100ms/98.0%
+[2026-06-26T13:39:42.905-0300][2.329s][15444][16128][info][gc,marking  ] GC(0) Y: Mark: 1 stripe(s), 2 proactive flush(es), 1 terminate flush(es), 0 completion(s), 0 continuation(s) 
+[2026-06-26T13:39:42.906-0300][2.330s][15444][16128][info][gc,nmethod  ] GC(0) Y: NMethods: 3188 registered, 0 unregistered
+[2026-06-26T13:39:42.906-0300][2.330s][15444][16128][info][gc,metaspace] GC(0) Y: Metaspace: 20M used, 21M committed, 1088M reserved
+[2026-06-26T13:39:42.906-0300][2.330s][15444][16128][info][gc,reloc    ] GC(0) Y:                        Candidates     Selected     In-Place         Size        Empty    Relocated 
+[2026-06-26T13:39:42.906-0300][2.330s][15444][16128][info][gc,reloc    ] GC(0) Y: Small Pages:                   39           31            0          78M           2M           5M 
+[2026-06-26T13:39:42.906-0300][2.330s][15444][16128][info][gc,reloc    ] GC(0) Y: Medium Pages:                   1            0            0          32M           0M           0M 
+[2026-06-26T13:39:42.906-0300][2.330s][15444][16128][info][gc,reloc    ] GC(0) Y: Large Pages:                    0            0            0           0M           0M           0M 
+[2026-06-26T13:39:42.906-0300][2.330s][15444][16128][info][gc,reloc    ] GC(0) Y: Forwarding Usage: 2M
+[2026-06-26T13:39:42.906-0300][2.330s][15444][16128][info][gc,reloc    ] GC(0) Y: Age Table:
+[2026-06-26T13:39:42.906-0300][2.330s][15444][16128][info][gc,reloc    ] GC(0) Y:                    Live             Garbage             Small              Medium             Large        
+[2026-06-26T13:39:42.906-0300][2.330s][15444][16128][info][gc,reloc    ] GC(0) Y: Eden              13M (0%)           96M (3%)          39 / 31             1 / 0              0 / 0        
+[2026-06-26T13:39:42.906-0300][2.330s][15444][16128][info][gc,heap     ] GC(0) Y: Min Capacity: 8M(0%)
+[2026-06-26T13:39:42.906-0300][2.330s][15444][16128][info][gc,heap     ] GC(0) Y: Max Capacity: 3072M(100%)
+[2026-06-26T13:39:42.906-0300][2.330s][15444][16128][info][gc,heap     ] GC(0) Y: Soft Max Capacity: 3072M(100%)
+[2026-06-26T13:39:42.906-0300][2.330s][15444][16128][info][gc,heap     ] GC(0) Y: Heap Statistics:
+[2026-06-26T13:39:42.906-0300][2.330s][15444][16128][info][gc,heap     ] GC(0) Y:                Mark Start          Mark End        Relocate Start      Relocate End           High               Low         
+[2026-06-26T13:39:42.906-0300][2.330s][15444][16128][info][gc,heap     ] GC(0) Y:  Capacity:      512M (17%)         512M (17%)         512M (17%)         512M (17%)         512M (17%)         512M (17%)    
+[2026-06-26T13:39:42.906-0300][2.330s][15444][16128][info][gc,heap     ] GC(0) Y:      Free:     2962M (96%)        2958M (96%)        2960M (96%)        3018M (98%)        3018M (98%)        2958M (96%)    
+[2026-06-26T13:39:42.906-0300][2.330s][15444][16128][info][gc,heap     ] GC(0) Y:      Used:      110M (4%)          114M (4%)          112M (4%)           54M (2%)          114M (4%)           54M (2%)     
+[2026-06-26T13:39:42.906-0300][2.330s][15444][16128][info][gc,heap     ] GC(0) Y: Young Generation Statistics:
+[2026-06-26T13:39:42.906-0300][2.330s][15444][16128][info][gc,heap     ] GC(0) Y:                Mark Start          Mark End        Relocate Start      Relocate End    
+[2026-06-26T13:39:42.906-0300][2.330s][15444][16128][info][gc,heap     ] GC(0) Y:      Used:      110M (4%)          114M (4%)          112M (4%)           54M (2%)     
+[2026-06-26T13:39:42.906-0300][2.330s][15444][16128][info][gc,heap     ] GC(0) Y:      Live:         -                13M (0%)           13M (0%)           13M (0%)     
+[2026-06-26T13:39:42.906-0300][2.330s][15444][16128][info][gc,heap     ] GC(0) Y:   Garbage:         -                96M (3%)           94M (3%)           30M (1%)     
+[2026-06-26T13:39:42.906-0300][2.330s][15444][16128][info][gc,heap     ] GC(0) Y: Allocated:         -                 4M (0%)            4M (0%)            9M (0%)     
+[2026-06-26T13:39:42.906-0300][2.330s][15444][16128][info][gc,heap     ] GC(0) Y: Reclaimed:         -                  -                 2M (0%)           65M (2%)     
+[2026-06-26T13:39:42.906-0300][2.330s][15444][16128][info][gc,heap     ] GC(0) Y:  Promoted:         -                  -                 0M (0%)            0M (0%)     
+[2026-06-26T13:39:42.906-0300][2.330s][15444][16128][info][gc,heap     ] GC(0) Y: Compacted:         -                  -                  -                 6M (0%)     
+[2026-06-26T13:39:42.906-0300][2.330s][15444][16128][info][gc,phases   ] GC(0) Y: Young Generation 110M(4%)->54M(2%) 0.035s
+[2026-06-26T13:39:42.906-0300][2.330s][15444][16128][info][gc,phases   ] GC(0) O: Old Generation
+[2026-06-26T13:39:42.907-0300][2.331s][15444][16128][info][gc,phases   ] GC(0) O: Concurrent Mark 0.977ms
+[2026-06-26T13:39:42.907-0300][2.331s][15444][976  ][info][gc,phases   ] GC(0) O: Pause Mark End 0.014ms
+[2026-06-26T13:39:42.907-0300][2.331s][15444][16128][info][gc,phases   ] GC(0) O: Concurrent Mark Free 0.001ms

@@ -279,6 +279,12 @@
 
 <p>Throughout this period, crash logs and minidumps were cross-referenced across affected users (Kolopis, SemaGD, Beard).</p>
 
+<h4>Logs from this phase</h4>
+<ul>
+    <li><a href="logs/lwjgl_-06-2026_13-01.log"><code>lwjgl_-06-2026_13-01.log</code></a> — Early log, no <code>allocator=system</code>. Shows mod load errors only.</li>
+    <li><a href="logs/lwjgl_-06-2026_13-15.log"><code>lwjgl_-06-2026_13-15.log</code></a> — First run with <code>allocator=system</code> + <code>DebugAll=true</code>. Captures system specs (AMD driver 31.0.21924.61, OS build 26200). Game loaded successfully.</li>
+</ul>
+
 <h3>Phase 1: Garbage Collection Hypothesis (June 17)</h3>
 <p><strong>Observation:</strong> Crashes coincided with GC cycles (garbage collection pause events in ZGC).</p>
 <p><strong>Action taken by investigator (Will):</strong></p>
@@ -300,6 +306,20 @@
 <div class="callout">
     <strong>Conclusion:</strong> GC tuning alleviates symptoms but does not address the root cause. Crashes during the black screen (pre-menu) and loading screen — when GC pressure is minimal — confirmed that GC was a temporal coincidence.
 </div>
+
+<h4>Logs from this phase</h4>
+<ul>
+    <li><a href="logs/gc_2026-06-26_13-31-05.log"><code>gc_2026-06-26_13-31-05.log</code></a> — GC log from the first system allocator test run.</li>
+    <li><a href="logs/gc_2026-06-26_13-33-20.log"><code>gc_2026-06-26_13-33-20.log</code></a> — GC log from the second run.</li>
+    <li><a href="logs/gc_2026-06-26_13-34-31.log"><code>gc_2026-06-26_13-34-31.log</code></a> — GC log from the third run.</li>
+    <li><a href="logs/gc_2026-06-26_13-39-40.log"><code>gc_2026-06-26_13-39-40.log</code></a> — GC log truncated by crash at ~3s (black screen).</li>
+    <li><a href="logs/gc_2026-06-26_13-47-50.log"><code>gc_2026-06-26_13-47-50.log</code></a> — GC log from post-crash restart.</li>
+    <li><a href="logs/gc_2026-06-26_13-51-15.log"><code>gc_2026-06-26_13-51-15.log</code></a> — GC log from subsequent successful run.</li>
+    <li><a href="logs/gc_2026-06-26_13-52-49.log"><code>gc_2026-06-26_13-52-49.log</code></a> — GC log from gameplay session.</li>
+    <li><a href="logs/gc_2026-06-26_13-54-02.log"><code>gc_2026-06-26_13-54-02.log</code></a> — GC log from extended gameplay session.</li>
+    <li><a href="logs/gc_2026-06-26_17-34-52.log"><code>gc_2026-06-26_17-34-52.log</code></a> — GC log from ~3.5h afternoon gameplay.</li>
+    <li><a href="logs/gc_2026-06-27_00-43-05.log"><code>gc_2026-06-27_00-43-05.log</code></a> — GC log from the PageHeap crash run (truncated by immediate crash).</li>
+</ul>
 </div>
 
 <!-- ── Phase 2 ── -->
@@ -323,6 +343,13 @@
 <div class="callout warning">
     <strong>Conclusion:</strong> The hypothesis that jemalloc is <strong>the</strong> root cause was weakened when Kolopis crashed even with <code>allocator=system</code> active. However, the improvement for Will and SemaGD suggests jemalloc is <strong>a contributing factor</strong> for some users.
 </div>
+
+<h4>Logs from this phase</h4>
+<ul>
+    <li><a href="logs/lwjgl_2026-06-26_13-31-05.log"><code>lwjgl_2026-06-26_13-31-05.log</code></a> — System allocator test #1. Successful game load.</li>
+    <li><a href="logs/lwjgl_2026-06-26_13-33-20.log"><code>lwjgl_2026-06-26_13-33-20.log</code></a> — System allocator test #2. Successful game load.</li>
+    <li><a href="logs/lwjgl_2026-06-26_13-34-31.log"><code>lwjgl_2026-06-26_13-34-31.log</code></a> — System allocator test #3. Successful game load.</li>
+</ul>
 </div>
 
 <!-- ── Phase 3 ── -->
@@ -349,6 +376,13 @@
     <tr><td><strong>Mar 10</strong></td><td><strong>KB5054156 installed</strong></td><td><strong>26200</strong></td><td><span class="badge-status no">26100</span></td><td><strong>Crashes began</strong></td></tr>
     <tr><td>Jun 26 (current)</td><td>Investigation</td><td>26200</td><td><span class="badge-status no">26100</span></td><td>42.15.0+ ❌</td></tr>
 </table>
+
+<h4>Logs from this phase</h4>
+<ul>
+    <li><a href="logs/lwjgl_2026-06-26_13-39-40.log"><code>lwjgl_2026-06-26_13-39-40.log</code></a> — <strong>Crash detected.</strong> Exit code <code>-1073740940</code> (c0000374 STATUS_HEAP_CORRUPTION) even with <code>allocator=system</code>. Crashed on black screen at ~3s. This log triggered the shift toward investigating ntdll mismatch and AMD driver.</li>
+    <li><a href="logs/lwjgl_2026-06-26_13-47-50.log"><code>lwjgl_2026-06-26_13-47-50.log</code></a> — Post-crash restart. Successful game load.</li>
+    <li><a href="logs/lwjgl_2026-06-26_13-51-15.log"><code>lwjgl_2026-06-26_13-51-15.log</code></a> — Successful game load.</li>
+</ul>
 </div>
 
 <!-- ── Phase 4 ── -->
@@ -417,6 +451,13 @@ jvm+0x2adf54                           ← jvm.dll (JVM)</code></pre>
 <div class="callout danger">
     <strong>Critical finding:</strong> Neither dump shows jemalloc in the stack. Both heap operations go directly through <code>ucrtbase</code> → <code>ntdll</code> without jemalloc intermediation. This is the primary reason the investigation shifted toward examining the ntdll version mismatch and AMD driver.
 </div>
+
+<h4>Logs from this phase</h4>
+<ul>
+    <li><a href="logs/lwjgl_2026-06-26_13-52-49.log"><code>lwjgl_2026-06-26_13-52-49.log</code></a> — Gameplay session after crash testing. Ends with "GameThread exited".</li>
+    <li><a href="logs/lwjgl_2026-06-26_13-54-02.log"><code>lwjgl_2026-06-26_13-54-02.log</code></a> — Extended gameplay. Contains Lua mod errors from "Context Menu Crafting [B42]".</li>
+    <li><a href="logs/lwjgl_2026-06-26_17-34-52.log"><code>lwjgl_2026-06-26_17-34-52.log</code></a> — ~3.5h afternoon gameplay session. Clean exit with "Saving worldgen params".</li>
+</ul>
 </div>
 
 <!-- ── Phase 5 ── -->
@@ -476,6 +517,13 @@ Child-SP          RetAddr           Call Site
 </div>
 
 <p><strong>Dump file generated:</strong> <code>hs_err_pid16052.mdmp</code> — 1.57 GB core dump, available for TIS analysis.</p>
+
+<h4>Logs from this phase</h4>
+<ul>
+    <li><a href="logs/lwjgl_2026-06-27_00-43-05.log"><code>lwjgl_2026-06-27_00-43-05.log</code></a> — LWJGL log from PageHeap run. Crashed at ~3s on black screen. Exit code <code>c0000005</code> (ACCESS_VIOLATION).</li>
+    <li><a href="logs/hs_err_2026-06-27_00-43-05.log"><code>hs_err_2026-06-27_00-43-05.log</code></a> — <strong>JVM crash report.</strong> EXCEPTION_ACCESS_VIOLATION (0xc0000005) in <code>atio6axx.dll+0x346a8e</code>. AMD OpenGL driver buffer overrun during <code>glGetInteger</code> in <code>GameWindow.InitDisplay()</code>. The breakthrough evidence.</li>
+    <li><a href="logs/gc_2026-06-27_00-43-05.log"><code>gc_2026-06-27_00-43-05.log</code></a> — GC log for the PageHeap run (3KB, truncated by immediate crash).</li>
+</ul>
 </div>
 
 <!-- ═══════════════════════════════════════════ -->
@@ -750,10 +798,33 @@ gflags /p /disable java.exe  (to disable after testing)</code></pre>
 <h3 id="appendix-directory">Appendix D: Bug Tracking Directory Structure</h3>
 <pre><code>D:\SteamLibrary\steamapps\common\ProjectZomboid\
 ├── .crashes-tracking\
-│   ├── lwjgl_*.log              (LWJGL debug logs)
-│   ├── gc_*.log                 (GC logs)
-│   ├── hs_err_*.log             (JVM crash reports)
-│   └── dumps\                   (Windows minidumps)
+│   ├── lwjgl_-06-2026_13-01.log          (4 KB)   — Early log, no allocator override
+│   ├── lwjgl_-06-2026_13-15.log          (614 KB) — allocator=system + DebugAll, system specs
+│   ├── lwjgl_2026-06-26_13-31-05.log     (641 KB) — System allocator test #1
+│   ├── lwjgl_2026-06-26_13-33-20.log     (640 KB) — System allocator test #2
+│   ├── lwjgl_2026-06-26_13-34-31.log     (640 KB) — System allocator test #3
+│   ├── lwjgl_2026-06-26_13-39-40.log     (6 KB)   — ⚠️ CRASH: c0000374 on black screen
+│   ├── lwjgl_2026-06-26_13-47-50.log     (640 KB) — Post-crash restart
+│   ├── lwjgl_2026-06-26_13-51-15.log     (640 KB) — Successful game load
+│   ├── lwjgl_2026-06-26_13-52-49.log     (641 KB) — Gameplay session
+│   ├── lwjgl_2026-06-26_13-54-02.log     (735 KB) — Extended gameplay + Lua mod errors
+│   ├── lwjgl_2026-06-26_17-34-52.log     (679 KB) — ~3.5h afternoon gameplay, clean exit
+│   ├── lwjgl_2026-06-27_00-43-05.log     (7 KB)   — PageHeap crash at 3s (c0000005)
+│   ├── hs_err_2026-06-27_00-43-05.log    (175 KB) — JVM crash report: atio6axx.dll buffer overrun
+│   ├── gc_2026-06-26_13-31-05.log        (536 KB) — GC log
+│   ├── gc_2026-06-26_13-33-20.log        (505 KB) — GC log
+│   ├── gc_2026-06-26_13-34-31.log        (482 KB) — GC log
+│   ├── gc_2026-06-26_13-39-40.log        (11 KB)  — GC log (truncated by crash)
+│   ├── gc_2026-06-26_13-47-50.log        (424 KB) — GC log
+│   ├── gc_2026-06-26_13-51-15.log        (406 KB) — GC log
+│   ├── gc_2026-06-26_13-52-49.log        (511 KB) — GC log
+│   ├── gc_2026-06-26_13-54-02.log        (1.0 MB) — GC log
+│   ├── gc_2026-06-26_17-34-52.log        (1.3 MB) — GC log
+│   ├── gc_2026-06-27_00-43-05.log        (3 KB)   — GC log (truncated by PageHeap crash)
+│   └── dumps\
+│       ├── java.exe.18184.dmp                     — SemaGD Dump #1 (glfw ReAllocateHeap)
+│       ├── java.exe.13764.dmp                     — SemaGD Dump #2 (JVM FreeHeap)
+│       └── hs_err_pid16052.mdmp                   — PageHeap core dump (1.57 GB)
 ├── ProjectZomboid64.bat                    (original)
 ├── ProjectZomboid64-nojemalloc.bat         (with allocator=system only)
 ├── ProjectZomboid64-nojemalloc-debug.bat   (with debug logging)

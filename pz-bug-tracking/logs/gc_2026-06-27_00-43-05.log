@@ -1,0 +1,31 @@
+[2026-06-27T00:43:06.071-0300][0.042s][16052][7592][info][gc,init] Initializing The Z Garbage Collector
+[2026-06-27T00:43:06.071-0300][0.042s][16052][7592][info][gc,init] Version: 25.0.1+8-LTS (release)
+[2026-06-27T00:43:06.071-0300][0.043s][16052][7592][info][gc,init] NUMA Support: Disabled
+[2026-06-27T00:43:06.072-0300][0.043s][16052][7592][info][gc,init] CPUs: 12 total, 12 available
+[2026-06-27T00:43:06.072-0300][0.043s][16052][7592][info][gc,init] Memory: 32693M
+[2026-06-27T00:43:06.072-0300][0.043s][16052][7592][info][gc,init] Large Page Support: Disabled
+[2026-06-27T00:43:06.072-0300][0.043s][16052][7592][info][gc,init] Address Space Size: limited (137434151444K)
+[2026-06-27T00:43:06.072-0300][0.043s][16052][7592][info][gc,init] Reserved Space Type: Contiguous/Unrestricted/Complete
+[2026-06-27T00:43:06.072-0300][0.043s][16052][7592][info][gc,init] Reserved Space Size: 48G
+[2026-06-27T00:43:06.072-0300][0.044s][16052][7592][info][gc,init] Min Capacity: 8M
+[2026-06-27T00:43:06.072-0300][0.044s][16052][7592][info][gc,init] Initial Capacity: 512M
+[2026-06-27T00:43:06.072-0300][0.044s][16052][7592][info][gc,init] Max Capacity: 3072M
+[2026-06-27T00:43:06.072-0300][0.044s][16052][7592][info][gc,init] Soft Max Capacity: 3072M
+[2026-06-27T00:43:06.072-0300][0.044s][16052][7592][info][gc,init] Page Size Medium: Range [4M, 32M]
+[2026-06-27T00:43:06.072-0300][0.044s][16052][7592][info][gc,init] Pre-touch: Disabled
+[2026-06-27T00:43:06.072-0300][0.044s][16052][7592][info][gc,init] Uncommit: Enabled
+[2026-06-27T00:43:06.072-0300][0.044s][16052][7592][info][gc,init] Uncommit Delay: 300s
+[2026-06-27T00:43:06.072-0300][0.044s][16052][7592][info][gc,init] GC Workers for Old Generation: 3 (dynamic)
+[2026-06-27T00:43:06.073-0300][0.045s][16052][7592][info][gc,init] GC Workers for Young Generation: 3 (dynamic)
+[2026-06-27T00:43:06.082-0300][0.055s][16052][7592][info][gc,init] GC Workers Max: 3 (dynamic)
+[2026-06-27T00:43:06.083-0300][0.055s][16052][7592][info][gc,init] Runtime Workers: 8
+[2026-06-27T00:43:06.085-0300][0.057s][16052][7592][info][gc     ] Using The Z Garbage Collector
+[2026-06-27T00:43:06.091-0300][0.063s][16052][7592][info][gc,metaspace] CDS archive(s) mapped at: [0x000000001b000000-0x000000001bd20000-0x000000001bd20000), size 13762560, SharedBaseAddress: 0x000000001b000000, ArchiveRelocationMode: 1.
+[2026-06-27T00:43:06.091-0300][0.063s][16052][7592][info][gc,metaspace] Compressed class space mapped at: 0x000000001c000000-0x000000005c000000, reserved size: 1073741824
+[2026-06-27T00:43:06.091-0300][0.063s][16052][7592][info][gc,metaspace] UseCompressedClassPointers 1, UseCompactObjectHeaders 0
+[2026-06-27T00:43:06.091-0300][0.063s][16052][7592][info][gc,metaspace] Narrow klass pointer bits 32, Max shift 3
+[2026-06-27T00:43:06.091-0300][0.063s][16052][7592][info][gc,metaspace] Narrow klass base: 0x000000001b000000, Narrow klass shift: 0
+[2026-06-27T00:43:06.091-0300][0.063s][16052][7592][info][gc,metaspace] Encoding Range: [0x000000001b000000 - 0x000000011b000000), (4294967296 bytes)
+[2026-06-27T00:43:06.091-0300][0.063s][16052][7592][info][gc,metaspace] Klass Range:    [0x000000001b010000 - 0x000000005c000000), (1090453504 bytes)
+[2026-06-27T00:43:06.091-0300][0.063s][16052][7592][info][gc,metaspace] Klass ID Range:  [65536 - 1090519033) (1090453497)
+[2026-06-27T00:43:06.091-0300][0.063s][16052][7592][info][gc,metaspace] Protection zone: [0x000000001b000000 - 0x000000001b010000), (65536 bytes)

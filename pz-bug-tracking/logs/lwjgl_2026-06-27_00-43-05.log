@@ -1,0 +1,113 @@
+WARNING: A restricted method in java.lang.System has been called
+WARNING: java.lang.System::load has been called by org.lwjgl.system.Library$$Lambda/0x000000001c046050 in an unnamed module (file:/D:/SteamLibrary/steamapps/common/ProjectZomboid/projectzomboid.jar)
+WARNING: Use --enable-native-access=ALL-UNNAMED to avoid a warning for callers in this module
+WARNING: Restricted methods will be blocked in a future release unless native access is enabled
+
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.lwjgl.system.MemoryUtil (file:/D:/SteamLibrary/steamapps/common/ProjectZomboid/projectzomboid.jar)
+WARNING: Please consider reporting this to the maintainers of class org.lwjgl.system.MemoryUtil
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+LOG  : General      f:0> 27-06-2026 00:43:07
+LOG  : General      f:0> SLF4J(I): Attempting to load provider "zombie.core.logger.Slf4jBridge" specified via "slf4j.provider" system property
+LOG  : General      f:0> ===== System specs =====
+LOG  : General      f:0> CPU: AMD Ryzen 5 3600 6-Core Processor              , vendor: AuthenticAMD, cores: 6, threads: 12
+LOG  : General      f:0> RAM: 32693 Mb
+LOG  : General      f:0> Base board: A320M-HD, vendor: ASRock
+LOG  : General      f:0> GPU: Radeon RX 590 Series, vendor: Advanced Micro Devices, Inc., video memory: 8192 Mb, driver: 31.0.21923.11000
+LOG  : General      f:0> GPU: Radeon RX 590 Series, vendor: Advanced Micro Devices, Inc., video memory: 8192 Mb, driver: 31.0.21924.61
+LOG  : General      f:0> Disk info: 446.21 Gb, free space: 68.17 Gb, usable space: 68.17 Gb
+LOG  : General      f:0> OS: Windows 11, version: 10.0, arch: amd64, build: 26200
+LOG  : General      f:0> JVM (free: 418 Mb, max: 3072 Mb, total available: 512 Mb)
+LOG  : General      f:0> ========================
+LOG  : General      f:0> org.lwjgl.util.DebugAll=true
+LOG  : General      f:0> java.specification.version=25
+LOG  : General      f:0> sun.cpu.isalist=amd64
+LOG  : General      f:0> sun.jnu.encoding=Cp1252
+LOG  : General      f:0> java.vm.vendor=Azul Systems, Inc.
+LOG  : General      f:0> sun.arch.data.model=64
+LOG  : General      f:0> java.vendor.url=http://www.azul.com/
+LOG  : General      f:0> zomboid.steam=1
+LOG  : General      f:0> java.vm.specification.version=25
+LOG  : General      f:0> os.name=Windows 11
+LOG  : General      f:0> sun.java.launcher=SUN_STANDARD
+LOG  : General      f:0> zomboid.znetlog=1
+LOG  : General      f:0> sun.java.command=zombie.gameStates.MainScreenState
+LOG  : General      f:0> slf4j.provider=zombie.core.logger.Slf4jBridge
+LOG  : General      f:0> jdk.debug=release
+LOG  : General      f:0> sun.cpu.endian=little
+LOG  : General      f:0> java.specification.vendor=Oracle Corporation
+LOG  : General      f:0> java.version.date=2025-10-21
+LOG  : General      f:0> java.home=D:\SteamLibrary\steamapps\common\Proj...
+LOG  : General      f:0> file.separator=\
+LOG  : General      f:0> line.separator=
+
+LOG  : General      f:0> java.vm.specification.vendor=Oracle Corporation
+LOG  : General      f:0> java.specification.name=Java Platform API Specification
+LOG  : General      f:0> java.awt.headless=true
+LOG  : General      f:0> sun.management.compiler=HotSpot 64-Bit Tiered Compilers
+LOG  : General      f:0> java.runtime.version=25.0.1+8-LTS
+LOG  : General      f:0> org.lwjgl.system.allocator=system
+LOG  : General      f:0> stdout.encoding=Cp1252
+LOG  : General      f:0> os.version=10.0
+LOG  : General      f:0> jna.nosys=false
+LOG  : General      f:0> java.runtime.name=OpenJDK Runtime Environment
+LOG  : General      f:0> file.encoding=UTF-8
+LOG  : General      f:0> java.vm.name=OpenJDK 64-Bit Server VM
+LOG  : General      f:0> java.vendor.version=Zulu25.30+17-CA
+LOG  : General      f:0> jna.loaded=true
+LOG  : General      f:0> java.vendor.url.bug=http://www.azul.com/support/
+LOG  : General      f:0> java.version=25.0.1
+LOG  : General      f:0> os.arch=amd64
+LOG  : General      f:0> java.vm.specification.name=Java Virtual Machine Specification
+LOG  : General      f:0> sun.os.patch.level=
+LOG  : General      f:0> native.encoding=Cp1252
+LOG  : General      f:0> java.vm.info=mixed mode, sharing
+LOG  : General      f:0> stderr.encoding=Cp1252
+LOG  : General      f:0> java.vendor=Azul Systems, Inc.
+LOG  : General      f:0> java.vm.version=25.0.1+8-LTS
+LOG  : General      f:0> stdin.encoding=cp850
+LOG  : General      f:0> sun.io.unicode.encoding=UnicodeLittle
+LOG  : General      f:0> java.class.version=69.0
+LOG  : General      f:0> -----
+LOG  : General      f:0> version=42.19.0 1aa820d7bb66c4e55513cae04022bdacdac5b34e 2026-06-01 09:40:02 (ZB) demo=false
+LOG  : General      f:0> branch=steam/release revision=1aa820d7bb66c4e55513cae04022bdacdac5b34e date=2026-06-01 time=09:40:02 pzbullet=1.0.0.28 (ZB)
+LOG  : General      f:0> Logs configuration:
+LOG  : General      f:0>      General: General
+LOG  : General      f:0>          Lua: General
+LOG  : General      f:0>          Mod: General
+LOG  : General      f:0>  Multiplayer: General
+LOG  : General      f:0>      Network: Error
+LOG  : General      f:0>      Default: Off
+LOG  : General      f:0> LightingFPS set to 15
+LOG  : General      f:0> Display mode changed to 2560x1080 freq=0 fullScreen=false
+LOG  : General      f:0> GraphicsCard: ATI Technologies Inc. Radeon RX 590 Series
+LOG  : General      f:0> OpenGL version: 4.6.0 Compatibility Profile Context 26.1.1.251211
+LOG  : General      f:0> Desktop resolution 2560x1080
+LOG  : General      f:0> Initial resolution 2560x1080 fullScreen=false
+LOG  : General      f:0> OpenGL 1.5 buffer objects supported
+LOG  : General      f:0> VSync: OFF
+#
+# A fatal error has been detected by the Java Runtime Environment:
+#
+#  EXCEPTION_ACCESS_VIOLATION (0xc0000005) at pc=0x00007ffbda946a8e, pid=16052, tid=7592
+#
+# JRE version: OpenJDK Runtime Environment Zulu25.30+17-CA (25.0.1+8) (build 25.0.1+8-LTS)
+# Java VM: OpenJDK 64-Bit Server VM Zulu25.30+17-CA (25.0.1+8-LTS, mixed mode, sharing, tiered, compressed class ptrs, z gc, windows-amd64)
+# Problematic frame:
+# C  [atio6axx.dll+0x346a8e]
+#
+# Core dump will be written. Default location: D:\SteamLibrary\steamapps\common\ProjectZomboid\hs_err_pid16052.mdmp
+#
+# An error report file with more information is saved as:
+# .crashes-tracking\hs_err_2026-06-27_00-43-05.log
+[3.222s][warning][os] Loading hsdis library failed
+#
+# If you would like to submit a bug report, please visit:
+#   http://www.azul.com/support/
+# The crash happened outside the Java Virtual Machine in native code.
+# See problematic frame for where to report the bug.
+#
+ 
+[CRASH DETECTED] Exit code: 1 
+Timestamp: 2026-06-27_00-43-05 
+Check .crashes-tracking\dumps for Windows minidump 

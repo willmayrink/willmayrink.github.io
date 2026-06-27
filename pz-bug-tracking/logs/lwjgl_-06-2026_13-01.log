@@ -1,0 +1,57 @@
+WARNING: A restricted method in java.lang.System has been called
+WARNING: java.lang.System::load has been called by org.lwjgl.system.Library$$Lambda/0x0000000095046050 in an unnamed module (file:/D:/SteamLibrary/steamapps/common/ProjectZomboid/projectzomboid.jar)
+WARNING: Use --enable-native-access=ALL-UNNAMED to avoid a warning for callers in this module
+WARNING: Restricted methods will be blocked in a future release unless native access is enabled
+
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.lwjgl.system.MemoryUtil (file:/D:/SteamLibrary/steamapps/common/ProjectZomboid/projectzomboid.jar)
+WARNING: Please consider reporting this to the maintainers of class org.lwjgl.system.MemoryUtil
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+LOG  : General      f:0> SLF4J(I): Attempting to load provider "zombie.core.logger.Slf4jBridge" specified via "slf4j.provider" system property
+Setting breakpad minidump AppID = 108600
+SteamInternal_SetMinidumpSteamID:  Caching Steam ID:  76561198154531355 [API loaded no]
+ERROR: General      f:0 at FluidContainerScript.load           > Sanitizing container name 'Large Bucket', name may not contain whitespaces.
+ERROR: General      f:0 at FluidContainerScript.load           > Sanitizing container name 'Fuel Pump', name may not contain whitespaces.
+ERROR: General      f:0 at KahluaThread.flushErrorMessage      > expected argument of type ItemBodyLocation, got String
+ERROR: General      f:0 at KahluaThread.flushErrorMessage      > dumping Lua stack trace
+-----------------------------------------
+STACK TRACE
+-----------------------------------------
+	Lua((MOD:简单背带Simple sling Mod)).Sling_BodyLocations.lua(Sling_BodyLocations.lua:3)
+ERROR: General      f:0> Lua((MOD:简单背带Simple sling Mod)).Sling_BodyLocations.lua> Exception thrown
+	java.lang.RuntimeException: expected argument of type ItemBodyLocation, got String at MethodArguments.assertValid(MethodArguments.java:128).
+	Stack trace:
+		se.krka.kahlua.integration.expose.MethodArguments.assertValid(MethodArguments.java:128)
+		se.krka.kahlua.integration.expose.LuaJavaInvoker.call(LuaJavaInvoker.java:182)
+		se.krka.kahlua.vm.KahluaThread.callJava(KahluaThread.java:177)
+		Lua((MOD:简单背带Simple sling Mod)).Sling_BodyLocations.lua(Sling_BodyLocations.lua:3)
+		se.krka.kahlua.vm.KahluaThread.luaMainloop(KahluaThread.java:794)
+		se.krka.kahlua.vm.KahluaThread.call(KahluaThread.java:161)
+		se.krka.kahlua.vm.KahluaThread.pcall(KahluaThread.java:1749)
+		se.krka.kahlua.vm.KahluaThread.pcall(KahluaThread.java:1553)
+		se.krka.kahlua.integration.LuaCaller.pcall(LuaCaller.java:69)
+		se.krka.kahlua.integration.LuaCaller.protectedCall(LuaCaller.java:109)
+		zombie.Lua.LuaManager.RunLuaInternal(LuaManager.java:1376)
+		zombie.Lua.LuaManager.RunLua(LuaManager.java:1328)
+		zombie.Lua.LuaManager.RunLua(LuaManager.java:1317)
+		zombie.Lua.LuaManager.LoadDirBase(LuaManager.java:1207)
+		zombie.Lua.LuaManager.LoadDirBase(LuaManager.java:1121)
+		zombie.Lua.LuaManager.LoadDirBase(LuaManager.java:1243)
+		zombie.GameWindow.init(GameWindow.java:1154)
+		zombie.GameWindow.mainThreadInit(GameWindow.java:671)
+		zombie.GameWindow.mainThreadStart(GameWindow.java:542)
+		zombie.MainThread.mainLoop(MainThread.java:59)
+		java.base/java.lang.Thread.run(Unknown Source)
+ERROR: General      f:0 at KahluaThread.flushErrorMessage      > dumping Lua stack trace
+-----------------------------------------
+STACK TRACE
+-----------------------------------------
+	Lua((MOD:简单背带Simple sling Mod)).Sling_BodyLocations.lua(Sling_BodyLocations.lua:3)
+Jun 26, 2026 1:14:06 PM zombie.Lua.LuaManager RunLuaInternal
+SEVERE:  java.lang.RuntimeException
+Jun 26, 2026 1:14:06 PM zombie.Lua.LuaManager RunLuaInternal
+SEVERE: java.lang.RuntimeException: 
+Jun 26, 2026 1:14:06 PM zombie.Lua.LuaManager RunLuaInternal
+SEVERE: at getOrCreateLocation
+at Sling_BodyLocations.lua:3
+
