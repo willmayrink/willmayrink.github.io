@@ -1505,21 +1505,17 @@ Child-SP          RetAddr           Call Site
         </li>
         <li>
           <span class="rec-num">02</span>
-          <span><b>Ship <code>-Dorg.lwjgl.system.allocator=system</code> in the launch script.</b> Officially documented by LWJGL. Safe for all users. Removes jemalloc as an amplifier of AMD driver heap corruption (Branch 2), and aligns with how the investigation has been running. Crashes during gameplay dropped to zero for Will and improved significantly for SemaGD with this flag active.</span>
+          <span><b>Consider and test <code>-Dorg.lwjgl.system.allocator=system</code> in the launch script.</b> Officially documented by LWJGL. Safe for all users. Removes jemalloc as an amplifier of AMD driver heap corruption (Branch 2), and aligns with how the investigation has been running. Crashes during gameplay dropped to zero for Will and improved significantly for SemaGD with this flag active.</span>
         </li>
         <li>
           <span class="rec-num">03</span>
           <span><b>Add a known-issues note targeting AMD users on Adrenalin 26.1.1 or earlier.</b> Users experiencing black-screen crashes at startup on AMD hardware should be directed to update their GPU drivers as the first step, before any other troubleshooting.</span>
         </li>
-        <li>
-          <span class="rec-num">04</span>
-          <span><b>Windows Update for affected users.</b> The ntdll build 26100 / OS build 26200 mismatch (via KB5054156) may compound heap instability. An in-place Windows upgrade is a low-risk step for users on 25H2 preview builds.</span>
-        </li>
       </ul>
     </div>
 
     <div class="rec-block">
-      <div class="rec-block-header">Medium Term — Internal TIS Investigation</div>
+      <div class="rec-block-header">Medium/Long Term — Internal TIS Investigation</div>
       <ul class="rec-list">
         <li>
           <span class="rec-num">01</span>
@@ -1531,7 +1527,7 @@ Child-SP          RetAddr           Call Site
         </li>
         <li>
           <span class="rec-num">03</span>
-          <span><b>Collect GPU info from Kolopis.</b> His system (ntdll build 19041, OS 19045) differs from the other affected users. If he is also on AMD, the pattern is consistent and the driver hypothesis holds broadly. If he is on NVIDIA or Intel, a separate investigation thread is warranted for his crashes.</span>
+          <span><b>Evaluate benefits of <code>jemalloc</code></b> It's well known that jemalloc does provide increased performance in certain scenarios, but it also introduces complexity and potential issues on Windows platforms. A thorough analysis of its impact on game stability and performance is warranted.</span>
         </li>
         <li>
           <span class="rec-num">04</span>
@@ -1540,24 +1536,6 @@ Child-SP          RetAddr           Call Site
         <li>
           <span class="rec-num">05</span>
           <span><b>Test on NVIDIA and Intel hardware internally.</b> All confirmed affected users are on AMD. If TIS can confirm the crash is AMD-exclusive in internal testing, it validates the root cause and focuses the fix entirely on the AMD driver report.</span>
-        </li>
-      </ul>
-    </div>
-
-    <div class="rec-block">
-      <div class="rec-block-header">Long Term — Platform Hardening</div>
-      <ul class="rec-list">
-        <li>
-          <span class="rec-num">01</span>
-          <span><b>Document minimum AMD driver requirements for Build 42.</b> Once AMD confirms which Adrenalin version patches the overrun, establish a minimum supported driver version and surface it in-game or in the launcher for AMD users running outdated drivers.</span>
-        </li>
-        <li>
-          <span class="rec-num">02</span>
-          <span><b>Default to system allocator in production.</b> jemalloc on Windows has a poor track record in multi-threaded Java environments and provides no meaningful performance benefit over the Windows system allocator in a game context. <code>-Dorg.lwjgl.system.allocator=system</code> is a one-line change to the launch script that eliminates an entire class of potential allocator mismatch crashes.</span>
-        </li>
-        <li>
-          <span class="rec-num">03</span>
-          <span><b>Monitor Windows 25H2 GA rollout.</b> The ntdll mismatch introduced by KB5054156 will affect more users as 25H2 moves from preview to general availability. Tracking whether heap stability improves with full 25H2 GA (which should unify ntdll and OS builds) would close the ntdll open question.</span>
         </li>
       </ul>
     </div>
@@ -1602,19 +1580,23 @@ Child-SP          RetAddr           Call Site
 
         <p>This investigation wasn't strategic. It started in April because the crashes were annoying, and then it kept going because I couldn't stop once I saw the pattern forming. Using WinDbg on community-provided dumps, setting up PageHeap, reading through jemalloc issues from 2018 — none of that was required of me. I just couldn't leave it unresolved.</p>
 
-        <p>In the middle of all this, in May, I applied to join TIS's localisation volunteer effort for PT-BR. I was told the language was covered for now — which I completely understand. I kept working on the bug tracking regardless. I mention it only because it speaks to something consistent: the interest in contributing to this project isn't new, and it doesn't depend on the answer being yes.</p>
+        <p>In the middle of all this, in May, I applied to join TIS's localisation volunteer effort for PT-BR. I was told the language was covered for now — which I completely understand and thank your for the consideration. I kept working on the bug tracking regardless. I mention it only because it speaks to something consistent: the interest in contributing to this project isn't new, and it doesn't depend on the answer being yes.</p>
 
         <p>If there is any form of collaboration that would be useful to TIS — debugging, community triage, testing, localisation, anything — I would do it for free. Not as a figure of speech, but as a real offer. Money is not what I'm looking for. What I want is to be able to say, someday, that I helped build something I love. Project Zomboid is that thing for me.</p>
 
         <p>I understand if that's not something TIS is looking for right now. But I wanted to say it clearly, once, in a document where it would be read by the right people.</p>
 
-        <p>Thank you for the game. Thank you, Ash, for taking this seriously. I hope this report is useful.</p>
+        <p><i>Thank you TIS for the game. </i></p>
+        <p><i>Thank you, Ash, for taking this seriously.</i></p>
+        <p><i>Thank you, SemaGD and Kolopis, for your time and patience.</i></p>
+        <p><i> I hope this report is useful.</i></p>
 
         <div class="sig-block">
           <span class="sig-name">Will</span>
           <span>Community modder · Bug tracking lead</span>
           <span>Discord: <a href="https://discord.com/channels/136501320340209664/1476024384794923120">Will 修羅 · #game-crashes thread</a></span>
           <span>Steam Workshop: <a href="https://steamcommunity.com/sharedfiles/filedetails/?id=3611618114">RadioStationsExpanded</a></span>
+          <span>Mail: <a href="mailto:will.mayrink@gmail.com">will.mayrink@gmail.com</a></span>
         </div>
       </div>
     </div>
