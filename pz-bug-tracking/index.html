@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Zomboid Build 42 — Crash Investigation Report</title>
+    <style>
+        :root {
+            --text: #1a1a1a;
+            --text-secondary: #555;
+            --border: #ddd;
+            --bg-code: #f4f4f4;
+            --accent: #2563eb;
+            --accent-light: #eff6ff;
+            --warning: #f59e0b;
+            --danger: #dc2626;
+            --success: #16a34a;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        html { scroll-behavior: smooth; scroll-padding-top: 1rem; }
+
+        body {
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            color: var(--text);
+            background: #fff;
+            line-height: 1.7;
+            font-size: 0.95rem;
+        }
+
+        .layout {
+            display: flex;
+            max-width: 1400px;
+            margin: 0 auto;
+            min-height: 100vh;
+        }
+
+        /* ── Sidebar ── */
+        nav {
+            width: 280px;
+            flex-shrink: 0;
+            padding: 2rem 1.5rem;
+            border-right: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+            background: #fafafa;
+        }
+
+        nav h2 {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-secondary);
+            margin: 1.5rem 0 0.5rem;
+        }
+        nav h2:first-child { margin-top: 0; }
+
+        nav a {
+            display: block;
+            padding: 0.25rem 0;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.85rem;
+        }
+        nav a:hover { color: var(--accent); }
+        nav a.sub { padding-left: 1rem; font-size: 0.8rem; }
+
+        /* ── Main ── */
+        main {
+            flex: 1;
+            padding: 3rem 4rem;
+            max-width: 960px;
+        }
+
+        @media (max-width: 900px) {
+            .layout { flex-direction: column; }
+            nav { width: 100%; height: auto; position: static; border-right: none; border-bottom: 1px solid var(--border); padding: 1rem; }
+            main { padding: 1.5rem; }
+        }
+
+        /* ── Typography ── */
+        h1 { font-size: 2.2rem; font-weight: 700; margin-bottom: 0.25rem; letter-spacing: -0.02em; }
+        h2 { font-size: 1.5rem; font-weight: 600; margin-top: 3rem; margin-bottom: 1rem; padding-bottom: 0.4rem; border-bottom: 2px solid var(--accent); }
+        h3 { font-size: 1.15rem; font-weight: 600; margin-top: 2rem; margin-bottom: 0.75rem; }
+        h4 { font-size: 1rem; font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.5rem; }
+
+        p, li { margin-bottom: 0.6rem; }
+        ul, ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .meta-box {
+            background: var(--accent-light);
+            border: 1px solid #bfdbfe;
+            border-radius: 8px;
+            padding: 1rem 1.25rem;
+            margin-bottom: 2rem;
+            font-size: 0.9rem;
+        }
+        .meta-box strong { color: var(--accent); }
+
+        /* ── Tables ── */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0 1.5rem;
+            font-size: 0.85rem;
+        }
+        th, td {
+            border: 1px solid var(--border);
+            padding: 0.5rem 0.75rem;
+            text-align: left;
+            vertical-align: top;
+        }
+        th {
+            background: #f4f4f4;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        tr:nth-child(even) td { background: #fafafa; }
+
+        /* ── Code ── */
+        code {
+            font-family: 'Cascadia Code', 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+            font-size: 0.8rem;
+            background: var(--bg-code);
+            padding: 0.125rem 0.35rem;
+            border-radius: 3px;
+        }
+        pre {
+            background: #1a1a2e;
+            color: #e4e4e4;
+            padding: 1rem 1.25rem;
+            border-radius: 6px;
+            overflow-x: auto;
+            margin: 1rem 0 1.5rem;
+            font-size: 0.8rem;
+            line-height: 1.5;
+        }
+        pre code {
+            background: none;
+            padding: 0;
+            color: inherit;
+            font-size: inherit;
+        }
+
+        /* ── Cards / callouts ── */
+        .callout {
+            border-left: 4px solid var(--accent);
+            background: var(--accent-light);
+            padding: 0.75rem 1rem;
+            margin: 1rem 0 1.5rem;
+            border-radius: 0 6px 6px 0;
+            font-size: 0.9rem;
+        }
+        .callout.warning { border-color: var(--warning); background: #fffbeb; }
+        .callout.danger { border-color: var(--danger); background: #fef2f2; }
+        .callout.success { border-color: var(--success); background: #f0fdf4; }
+
+        .tag {
+            display: inline-block;
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        .tag.open { background: #fef3c7; color: #92400e; }
+        .tag.fixed { background: #d1fae5; color: #065f46; }
+        .tag.closed { background: #e5e7eb; color: #374151; }
+        .tag.critical { background: #fee2e2; color: #991b1b; }
+
+        .badge-status {
+            display: inline-block;
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 0.1rem 0.4rem;
+            border-radius: 999px;
+            text-transform: uppercase;
+        }
+        .badge-status.yes { background: #d1fae5; color: #065f46; }
+        .badge-status.partial { background: #fef3c7; color: #92400e; }
+        .badge-status.no { background: #fee2e2; color: #991b1b; }
+
+        hr { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
+
+        .section-desc { color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.5rem; }
+
+        .timeline-item {
+            border-left: 3px solid var(--accent);
+            padding-left: 1rem;
+            margin: 1.5rem 0;
+        }
+        .timeline-item h3 { margin-top: 0; }
+
+        .reg-table td:first-child { font-weight: 600; white-space: nowrap; }
+    </style>
+</head>
+<body>
+<div class="layout">
+
+<nav>
+    <h2>Report</h2>
+    <a href="#executive-summary">Executive Summary</a>
+    <a href="#investigation-timeline">Investigation Timeline</a>
+    <a class="sub" href="#phase-0">Phase 0: Prelim (Apr 13)</a>
+    <a class="sub" href="#phase-1">Phase 1: GC</a>
+    <a class="sub" href="#phase-2">Phase 2: jemalloc</a>
+    <a class="sub" href="#phase-3">Phase 3: ntdll mismatch</a>
+    <a class="sub" href="#phase-4">Phase 4: SemaGD dumps</a>
+    <a class="sub" href="#phase-5">Phase 5: PageHeap / AMD</a>
+    <a href="#related-cases">Related Cases</a>
+    <a href="#current-status">Current Status</a>
+    <a href="#tools">Investigation Tools</a>
+    <a href="#recommendations">Recommendations</a>
+
+    <h2>Appendices</h2>
+    <a href="#appendix-gc">GC Arguments</a>
+    <a href="#appendix-script">Full Script Parameters</a>
+    <a href="#appendix-pageheap">PageHeap Config</a>
+    <a href="#appendix-directory">Directory Structure</a>
+</nav>
+
+<main>
+
+<h1>Project Zomboid Build 42<br>Crash Investigation Report</h1>
+<p class="subtitle">Community-led bug tracking investigation into native heap corruption crashes in PZ Build 42 (unstable)</p>
+
+<div class="meta-box">
+    <strong>Date:</strong> June 27, 2026 &middot;
+    <strong>Author:</strong> Will (community modder, bug tracking lead) &middot;
+    <strong>Intended for:</strong> Ash / The Indie Stone development team<br>
+    <strong>Status:</strong> <span class="tag critical">MAJOR BREAKTHROUGH</span> — AMD OpenGL driver buffer overrun identified as primary crash source
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<h2 id="executive-summary">Executive Summary</h2>
+
+<p>Project Zomboid Build 42 (unstable) has been experiencing crashes characterized by <code>c0000374</code> (STATUS_HEAP_CORRUPTION) in native heap memory on Windows, and <code>c0000005</code> (ACCESS_VIOLATION) in the AMD OpenGL driver. These crashes occur at varying stages: during the black screen (pre-menu), during world loading, and after extended gameplay sessions.</p>
+
+<p>The crashes affect a subset of users and are <strong>intermittent</strong> — they do not reproduce reliably. Will independently suspected the AMD GPU driver as early as April 13, based on <code>amdfendr.sys</code> crash dumps and the observation that all Reddit reports appeared to be from AMD users. Subsequent hypotheses explored ZGC Garbage Collection pressure and LWJGL's bundled jemalloc allocator. On June 27, a critical breakthrough was achieved using <strong>GFlags PageHeap</strong>: the crash was captured at its exact source — a <strong>buffer overrun in the AMD OpenGL driver (<code>atio6axx.dll</code>)</strong> during <code>glGetInteger</code> processing in <code>GameWindow.InitDisplay()</code>, confirming Will's original AMD suspicion.</p>
+
+<div class="callout danger">
+    <strong>Key Finding:</strong> The AMD OpenGL driver (Adrenalin 26.1.1, atio6axx.dll version <code>31.0.21924.61</code>, built December 2025) writes 4 bytes beyond the end of an allocated buffer during OpenGL initialization. Without PageHeap, this off-by-one silently corrupts adjacent heap data, causing delayed <code>c0000374</code> crashes. With PageHeap, the guard page forces an immediate <code>c0000005</code> access violation, revealing the true origin.
+</div>
+
+<p><strong>This finding reframes the investigation.</strong> The jemalloc interaction and ntdll version mismatch are likely <strong>amplifiers</strong>, not root causes. The primary bug appears to be in the AMD GPU driver's OpenGL ICD, specifically in the <code>glGetInteger</code> query path during <code>InitDisplay</code>.</p>
+
+<p>Analysis of Windows minidumps from affected users (Will and SemaGD) revealed a consistent pattern: <strong>ntdll.dll build <code>10.0.26100</code> running on Windows OS build <code>10.0.26200</code></strong> — a version mismatch where the heap manager DLL is from the 24H2 GA release while the OS is on a 25H2 preview build. This misalignment may amplify the impact of the driver's buffer overrun.</p>
+
+<!-- ═══════════════════════════════════════════ -->
+<h2 id="investigation-timeline">Investigation Timeline</h2>
+
+<!-- ── Phase 1 ── -->
+<div class="timeline-item" id="phase-0">
+<h3>Phase 0: Preliminary Investigation (April 13 — June 17)</h3>
+
+<p><strong>April 13 — First engagement, AMD suspicion.</strong> Will confirmed the regression began with PZ 42.14 by testing 42.13.2 via DepotDownloader (4–5 hours, no crashes). Submitted an <code>amdfendr.sys</code> crash dump (AMD watchdog driver, kernel-level GPU hang detection) and noted that Reddit crash reports appeared to be exclusively from AMD users.</p>
+
+<p><strong>April 14 — TDR hypothesis.</strong> Will independently identified AMD TDR (Timeout Detection and Recovery) as a potential cause and offered to test increasing TDR registry values.</p>
+
+<p><strong>April 30 — TDR test failed.</strong> Increasing TDR values had no effect. Will asked whether 42.14 introduced significant OpenGL rendering or math changes — presaging the eventual OpenGL driver finding.</p>
+
+<p><strong>May 6 — TDR confirmed ineffective.</strong> Will reported that manual TDR increase on his RX 590 produced no improvement. Crash investigation continued via WinDbg.</p>
+
+<p><strong>May 15 — Persistence across versions.</strong> Will confirmed crashes still occurred in PZ 42.19, ruling out a single-build regression.</p>
+
+<p><strong>June 2 — Loading trigger identified.</strong> Will observed that crashes were strongly correlated with world loading: if the game survived initial world init, crashes only occurred when loading previously unseen chunks.</p>
+
+<p>Throughout this period, crash logs and minidumps were cross-referenced across affected users (Kolopis, SemaGD, Beard).</p>
+
+<h3>Phase 1: Garbage Collection Hypothesis (June 17)</h3>
+<p><strong>Observation:</strong> Crashes coincided with GC cycles (garbage collection pause events in ZGC).</p>
+<p><strong>Action taken by investigator (Will):</strong></p>
+<ul>
+    <li>Analyzed JVM memory behavior during crashes</li>
+    <li>Noticed crashes happened when GC was active</li>
+    <li>Initially suspected pinned objects in ZGC due to JNI <code>GetPrimitiveArrayCritical</code> calls</li>
+</ul>
+
+<p><strong>Changes tested:</strong></p>
+<ol>
+    <li>Switched from ZGC to G1GC via <code>vmargs.json</code></li>
+    <li>Tuned G1GC: <code>InitiatingHeapOccupancyPercent=35</code>, <code>G1ReservePercent=15</code></li>
+    <li>Experimented with <code>-Xmx</code> values (3072m → 8192m)</li>
+</ol>
+
+<p><strong>Results:</strong> Some users reported reduced crash frequency, but crashes persisted. One affected user (Kolopis) crashed even with 8 million G1 regions configured.</p>
+
+<div class="callout">
+    <strong>Conclusion:</strong> GC tuning alleviates symptoms but does not address the root cause. Crashes during the black screen (pre-menu) and loading screen — when GC pressure is minimal — confirmed that GC was a temporal coincidence.
+</div>
+</div>
+
+<!-- ── Phase 2 ── -->
+<div class="timeline-item" id="phase-2">
+<h3>Phase 2: LWJGL / jemalloc Hypothesis (June 25)</h3>
+<p><strong>Observation:</strong> LWJGL bundles jemalloc as its default native memory allocator. Project Zomboid uses LWJGL for OpenGL rendering, input, and window management.</p>
+
+<p><strong>Action:</strong> Researched LWJGL's allocator system. Discovered the <code>-Dorg.lwjgl.system.allocator=system</code> JVM flag — an officially documented way to disable jemalloc and force the Windows system allocator.</p>
+
+<p><strong>Changes tested:</strong></p>
+<pre><code>-Dorg.lwjgl.system.allocator=system</code></pre>
+
+<p><strong>Results across users:</strong></p>
+<table>
+    <tr><th>User</th><th>Severity (Original)</th><th>With <code>allocator=system</code></th></tr>
+    <tr><td>Will (investigator)</td><td>Frequent crashes during loading/gameplay</td><td><span class="badge-status yes">Zero crashes</span></td></tr>
+    <tr><td>SemaGD</td><td>Crashed on black screen (pre-menu)</td><td><span class="badge-status partial">2 sessions without crash</span></td></tr>
+    <tr><td>Kolopis</td><td>Frequent crashes</td><td><span class="badge-status no">Still crashed</span></td></tr>
+</table>
+
+<div class="callout warning">
+    <strong>Conclusion:</strong> The hypothesis that jemalloc is <strong>the</strong> root cause was weakened when Kolopis crashed even with <code>allocator=system</code> active. However, the improvement for Will and SemaGD suggests jemalloc is <strong>a contributing factor</strong> for some users.
+</div>
+</div>
+
+<!-- ── Phase 3 ── -->
+<div class="timeline-item" id="phase-3">
+<h3>Phase 3: ntdll.dll Version Mismatch (June 26)</h3>
+<p><strong>Observation:</strong> During analysis of the machine running the game, a version mismatch was discovered:</p>
+
+<table>
+    <tr><th>Component</th><th>Expected</th><th>Found</th></tr>
+    <tr><td>Windows OS Build</td><td><code>10.0.26200</code> (25H2 preview)</td><td><code>10.0.26200</code></td></tr>
+    <tr><td>ntdll.dll (64-bit)</td><td>Should match OS build</td><td><code>10.0.26100.8521</code> (24H2 GA)</td></tr>
+    <tr><td>ntdll.dll (32-bit)</td><td>Should match OS build</td><td><code>10.0.26100.8328</code> (24H2 GA)</td></tr>
+</table>
+
+<p>The ntdll.dll is from build 26100 (Windows 11 24H2 GA), while the OS kernel is build 26200 (25H2 preview). This misalignment likely occurred via the <strong>KB5054156 enablement package</strong> (installed March 10, 2026), which advanced the OS version without updating all system DLLs.</p>
+
+<p class="callout warning"><strong>Proposed mechanism:</strong> Since ntdll.dll contains the Windows heap manager (<code>RtlHeap*</code> functions), running a mismatched version could cause subtle heap corruption — particularly during high-frequency allocator operations like those performed by LWJGL/jemalloc during game initialization.</p>
+
+<h4>KB5054156 Timeline</h4>
+<table>
+    <tr><th>Date</th><th>Event</th><th>Windows Build</th><th>ntdll</th><th>PZ State</th></tr>
+    <tr><td>Pre-Mar 9</td><td>PZ working</td><td>26100</td><td><span class="badge-status yes">26100</span></td><td>42.14.1 ✅</td></tr>
+    <tr><td>Mar 9</td><td>PZ 42.15 released</td><td>26100</td><td><span class="badge-status yes">26100</span></td><td>42.15.0</td></tr>
+    <tr><td><strong>Mar 10</strong></td><td><strong>KB5054156 installed</strong></td><td><strong>26200</strong></td><td><span class="badge-status no">26100</span></td><td><strong>Crashes began</strong></td></tr>
+    <tr><td>Jun 26 (current)</td><td>Investigation</td><td>26200</td><td><span class="badge-status no">26100</span></td><td>42.15.0+ ❌</td></tr>
+</table>
+</div>
+
+<!-- ── Phase 4 ── -->
+<div class="timeline-item" id="phase-4">
+<h3>Phase 4: SemaGD Minidump Analysis (June 26)</h3>
+<p>Two Windows minidumps were obtained from SemaGD, a user who crashed even with <code>allocator=system</code> active. Both were analyzed using <code>cdb.exe</code> (WinDbg CLI).</p>
+
+<h4>Dump #1: <code>java.exe.18184.dmp</code> — GLFW ReAllocateHeap Crash</h4>
+<table>
+    <tr><td>Process uptime</td><td>4 seconds</td></tr>
+    <tr><td>Exception</td><td><code>c0000374</code> (STATUS_HEAP_CORRUPTION)</td></tr>
+    <tr><td>Fault module</td><td>ntdll.dll (build 26100)</td></tr>
+    <tr><td>OS</td><td>Windows 10 Version 26200 (25H2 preview), build lab 26100.1</td></tr>
+    <tr><td>Phase</td><td>Black screen (pre-menu)</td></tr>
+</table>
+
+<pre><code>ntdll!RtlReportFatalFailure+0x9
+ntdll!RtlReportCriticalFailure+0xa9
+ntdll!RtlpHeapHandleError+0x12
+ntdll!RtlpHpHeapHandleError+0x7a
+ntdll!RtlpLogHeapFailure+0x4b
+ntdll!RtlpAnalyzeHeapFailure+0x307
+ntdll!RtlpReAllocateHeap+0x4c1          ← ReAllocateHeap failure
+ntdll!RtlpReAllocateHeapInternal+0xe5
+ntdll!RtlReAllocateHeap+0x4d
+glfw+0x26633                            ← glfw.dll (LWJGL window mgmt)</code></pre>
+
+<p><strong>Loaded modules at crash:</strong> jvm, glfw, lwjgl, lwjgl_opengl, awt, PZBullet64 <strong>only</strong>. No PZ game modules (PZPathFind64, etc.) loaded yet.</p>
+
+<h4>Dump #2: <code>java.exe.13764.dmp</code> — JVM FreeHeap Crash</h4>
+<table>
+    <tr><td>Process uptime</td><td>20 seconds</td></tr>
+    <tr><td>Exception</td><td><code>c0000374</code> (STATUS_HEAP_CORRUPTION)</td></tr>
+    <tr><td>Fault module</td><td>ntdll.dll (build 26100)</td></tr>
+    <tr><td>OS</td><td>Windows 10 Version 26200 (25H2 preview), build lab 26100.1</td></tr>
+    <tr><td>Phase</td><td>Advanced loading</td></tr>
+</table>
+
+<pre><code>ntdll!RtlReportFatalFailure+0x9
+ntdll!RtlReportCriticalFailure+0xa9
+ntdll!RtlpHeapHandleError+0x12
+ntdll!RtlpHpHeapHandleError+0x7a
+ntdll!RtlpLogHeapFailure+0x4b
+ntdll!RtlpAnalyzeHeapFailure+0x307
+ntdll!RtlpFreeHeap+0x248               ← FreeHeap failure
+ntdll!RtlFreeHeap+0x620
+ucrtbase!free_base+0x1b                ← CRT free()
+jvm+0x2adf54                           ← jvm.dll (JVM)</code></pre>
+
+<p><strong>Loaded modules at crash:</strong> All game native modules loaded — PZPathFind64, PZPopMan64, ZNetJNI64, RakNet64, Lighting64, fmod, fmodstudio, PZBullet64, PZClipper64, <strong>steam_api64</strong>, steamclient64. (Steam was open during this crash.)</p>
+
+<h4>Dump Comparison</h4>
+<table>
+    <tr><th>Characteristic</th><th>Dump #1 (18184)</th><th>Dump #2 (13764)</th></tr>
+    <tr><td>Process uptime</td><td>4 seconds</td><td>20 seconds</td></tr>
+    <tr><td>Thread</td><td>0:004</td><td>0:011</td></tr>
+    <tr><td>Heap operation</td><td><code>RtlReAllocateHeap</code></td><td><code>RtlFreeHeap</code></td></tr>
+    <tr><td>Origin module</td><td><code>glfw.dll</code></td><td><code>jvm.dll</code></td></tr>
+    <tr><td>Steam loaded?</td><td>No (crashed before)</td><td>Yes (steam_api64)</td></tr>
+    <tr><td>PZ modules loaded?</td><td>No</td><td>Yes (all)</td></tr>
+    <tr><td>GPU Driver</td><td>AMD (atio6axx + amdxc64)</td><td>AMD (atio6axx + amdxc64)</td></tr>
+    <tr><td>ntdll build</td><td><strong>26100</strong></td><td><strong>26100</strong></td></tr>
+    <tr><td>OS build</td><td><strong>26200</strong></td><td><strong>26200</strong></td></tr>
+</table>
+
+<div class="callout danger">
+    <strong>Critical finding:</strong> Neither dump shows jemalloc in the stack. Both heap operations go directly through <code>ucrtbase</code> → <code>ntdll</code> without jemalloc intermediation. This is the primary reason the investigation shifted toward examining the ntdll version mismatch and AMD driver.
+</div>
+</div>
+
+<!-- ── Phase 5 ── -->
+<div class="timeline-item" id="phase-5">
+<h3>Phase 5: PageHeap Breakthrough — AMD OpenGL Driver (June 27)</h3>
+<p><strong>Context:</strong> GFlags PageHeap (Standard) was enabled for <code>java.exe</code> to capture heap corruption at its exact source, avoiding <code>StackHash_8486</code> scenarios.</p>
+
+<p><strong>Action:</strong> Ran tracking script with <code>allocator=system</code> and PageHeap active. Game crashed on black screen at ~3 seconds.</p>
+
+<h4>Crash Details</h4>
+<table>
+    <tr><td>Exception</td><td><code>0xc0000005</code> (ACCESS_VIOLATION)</td></tr>
+    <tr><td>Module</td><td><code>atio6axx.dll</code> (AMD OpenGL Driver)</td></tr>
+    <tr><td>Instruction</td><td><code>mov dword ptr [rdi+rbx*4], eax</code></td></tr>
+    <tr><td>Crash address</td><td><code>0x0000027ed5c92000</code> (writing to unmapped page)</td></tr>
+    <tr><td>Java call chain</td><td><code>GL11C.glGetInteger</code> → <code>GameWindow.InitDisplay</code></td></tr>
+    <tr><td>Uptime</td><td>~3 seconds</td></tr>
+</table>
+
+<pre><code>atio6axx!DllMain+0x2f78be:
+mov     dword ptr [rdi+rbx*4], eax   ds:0000027e'd5c92000=????????
+
+Child-SP          RetAddr           Call Site
+000000e4`8abff080 00007ffb`da93fed3  atio6axx!DllMain+0x2f78be
+000000e4`8abff0e0 00007ffb`da9b13d8  atio6axx!DllMain+0x2f0d03
+000000e4`8abff280 0000027e`de03d30f  atio6axx!DllMain+0x362208</code></pre>
+
+<h4>Register Analysis</h4>
+<table class="reg-table">
+    <tr><td>RDI</td><td><code>0x0000027ed5c91ffc</code> — base of buffer (last 4 bytes of a 4KB page)</td></tr>
+    <tr><td>RBX</td><td>1 (index)</td></tr>
+    <tr><td>Target</td><td><code>rdi + rbx*4</code> = <code>0x0000027ed5c92000</code> — first byte of next page, <strong>not mapped</strong></td></tr>
+</table>
+
+<h4>AMD Driver Information</h4>
+<table>
+    <tr><td>DLL</td><td><code>atio6axx.dll</code> (AMD OpenGL Driver)</td></tr>
+    <tr><td>Path</td><td><code>C:\Windows\System32\DriverStore\FileRepository\u0197843.inf_amd64_82ec9e2b79afe28f\B025592\atio6axx.dll</code></td></tr>
+    <tr><td>File version</td><td><code>31.0.21924.61</code></td></tr>
+    <tr><td>Product version</td><td><code>25.12.0.0</code> (build <code>25.12.230729_569461f</code>)</td></tr>
+    <tr><td>Adrenalin version</td><td><strong>26.1.1</strong></td></tr>
+    <tr><td>Build date</td><td>December 11, 2025</td></tr>
+    <tr><td>GPU</td><td>AMD Radeon RX 590</td></tr>
+</table>
+
+<h4>How PageHeap Revealed the Root Cause</h4>
+<table>
+    <tr><th>Scenario</th><th>Without PageHeap</th><th>With PageHeap</th></tr>
+    <tr><td>Buffer allocation</td><td>May land with valid adjacent memory</td><td>Guard page placed after buffer</td></tr>
+    <tr><td>Off-by-one write</td><td>Corrupts adjacent data silently</td><td><strong>Immediate AV</strong></td></tr>
+    <tr><td>Symptom</td><td>Hours later: <code>c0000374</code></td><td>Immediate: <code>c0000005</code> in <code>atio6axx.dll</code></td></tr>
+    <tr><td>Diagnosis</td><td><code>StackHash_8486</code></td><td>Clean stack trace → AMD driver</td></tr>
+</table>
+
+<div class="callout success">
+    <strong>Reframed understanding:</strong> The AMD OpenGL driver has a buffer overrun bug during <code>glGetInteger()</code> queries at init time. This corrupts native heap memory. The jemalloc allocator (with unpatched race conditions) amplifies the corruption into crashes. The ntdll version mismatch further destabilizes the heap manager. This explains why <code>allocator=system</code> helped some users (less aggressive allocator = fewer crash manifestations) but did not eliminate crashes entirely (the driver corruption continues regardless).
+</div>
+
+<p><strong>Dump file generated:</strong> <code>hs_err_pid16052.mdmp</code> — 1.57 GB core dump, available for TIS analysis.</p>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<h2 id="related-cases">Related Cases — External Knowledge Base</h2>
+<p class="section-desc">A comprehensive search was conducted across GitHub Issues, LWJGL Forum, Stack Overflow, Microsoft Learn/Q&A, and technical blogs. Nine relevant cases were identified.</p>
+
+<h3>Case #1: LWJGL Issue #775 — Heap Corruption on buffer.free()</h3>
+<table>
+    <tr><td>Link</td><td><a href="https://github.com/LWJGL/lwjgl3/issues/775">github.com/LWJGL/lwjgl3/issues/775</a></td></tr>
+    <tr><td>Exception</td><td><code>c0000374</code> (STATUS_HEAP_CORRUPTION)</td></tr>
+    <tr><td>Root cause</td><td>Mixed allocator — <code>PointerBuffer.allocateDirect()</code> (system allocator) + <code>buffer.free()</code> (jemalloc)</td></tr>
+    <tr><td>Resolution</td><td><span class="tag fixed">FIXED</span> Use <code>memAlloc()</code> from LWJGL instead of <code>ByteBuffer.allocateDirect()</code></td></tr>
+</table>
+<p><strong>Connection to PZ:</strong> Proves mixed allocator via LWJGL + jemalloc causes <code>c0000374</code>. Same pattern as PZ when <code>GetPrimitiveArrayCritical</code> (system) and LWJGL jemalloc interact.</p>
+
+<h3>Case #2: LWJGL Issue #209 — stbi_image_free in jemalloc.dll</h3>
+<table>
+    <tr><td>Link</td><td><a href="https://github.com/LWJGL/lwjgl3/issues/209">github.com/LWJGL/lwjgl3/issues/209</a></td></tr>
+    <tr><td>Exception</td><td><code>c0000005</code> (ACCESS_VIOLATION) in <code>jemalloc.dll</code></td></tr>
+    <tr><td>Root cause</td><td>stb_image allocated via system <code>malloc()</code>, LWJGL redirected <code>free()</code> to jemalloc</td></tr>
+    <tr><td>Resolution</td><td><span class="tag closed">CLOSED</span> Force <code>allocator=system</code></td></tr>
+</table>
+<p><strong>Connection to PZ:</strong> Same pattern — C library (Bullet Physics, etc.) allocates one way, LWJGL frees via jemalloc.</p>
+
+<h3>Case #3: jemalloc Issue #1317 — Race in TSD handling on Windows</h3>
+<table>
+    <tr><td>Link</td><td><a href="https://github.com/jemalloc/jemalloc/issues/1317">github.com/jemalloc/jemalloc/issues/1317</a></td></tr>
+    <tr><td>Exception</td><td><code>c0000005</code> + deadlock</td></tr>
+    <tr><td>Root cause</td><td>Race condition when first jemalloc call comes from a non-main thread</td></tr>
+    <tr><td>Status</td><td><span class="tag open">OPEN — NOT FIXED</span> (since 2018)</td></tr>
+</table>
+<p><strong>Connection to PZ:</strong> PZ creates multiple threads during init (audio, render, physics, Lua). If jemalloc is first called from a worker thread, this race triggers.</p>
+
+<h3>Case #4: jemalloc Issue #2724 — Crash on Windows build 26100</h3>
+<table>
+    <tr><td>Link</td><td><a href="https://github.com/jemalloc/jemalloc/issues/2724">github.com/jemalloc/jemalloc/issues/2724</a></td></tr>
+    <tr><td>Exception</td><td><code>c0000005</code> in <code>ehooks_default_zero_impl</code></td></tr>
+    <tr><td>Root cause</td><td><code>extent_recycle()</code> returning corrupted address during multi-threaded init</td></tr>
+    <tr><td>Status</td><td><span class="tag closed">CLOSED</span> without fix</td></tr>
+</table>
+
+<div class="callout danger">
+    <strong>Critical connection:</strong> Occurred on <strong>Windows build 26100</strong> — the exact same build as the ntdll.dll on the affected machines. Demonstrates jemalloc is unstable on this Windows build specifically.
+</div>
+
+<h3>Case #5: jemalloc Issue #2721 — Crash in tcache_bin_flush_stashed</h3>
+<table>
+    <tr><td>Link</td><td><a href="https://github.com/jemalloc/jemalloc/issues/2721">github.com/jemalloc/jemalloc/issues/2721</a></td></tr>
+    <tr><td>Exception</td><td><code>c0000005</code></td></tr>
+    <tr><td>Root cause</td><td>Thread termination + concurrent initialization causing corrupted cache bin</td></tr>
+    <tr><td>Status</td><td><span class="tag closed">CLOSED</span> without fix</td></tr>
+</table>
+<p><strong>Connection to PZ:</strong> PZ creates and destroys threads during gameplay, triggering <code>tcache_cleanup</code>.</p>
+
+<h3>Case #6: jemalloc Issue #2490 — Stack corruption on Windows</h3>
+<table>
+    <tr><td>Link</td><td><a href="https://github.com/jemalloc/jemalloc/issues/2490">github.com/jemalloc/jemalloc/issues/2490</a></td></tr>
+    <tr><td>Exception</td><td><code>c0000005</code> + <code>WRONG_SYMBOLS</code> + corrupted stack</td></tr>
+    <tr><td>Status</td><td><span class="tag closed">CLOSED</span> without resolution</td></tr>
+</table>
+<p><strong>Connection to PZ:</strong> Shows jemalloc can corrupt the stack beyond recognition — matches <code>StackHash_8486</code> behavior seen in PZ crashes.</p>
+
+<h3>Case #7: dotnet/runtime Issue #68225 — Heap corruption on Windows 11</h3>
+<table>
+    <tr><td>Link</td><td><a href="https://github.com/dotnet/runtime/issues/68225">github.com/dotnet/runtime/issues/68225</a></td></tr>
+    <tr><td>Exception</td><td><code>c0000374</code> — <strong>hundreds of users affected, devs could not reproduce</strong></td></tr>
+    <tr><td>Root cause</td><td>Windows bug in <code>UiaDisconnectProvider()</code> (race condition in RPC call)</td></tr>
+    <tr><td>Resolution</td><td><span class="tag fixed">FIXED</span> Windows build 22567+. Workaround: Windows 8 compatibility mode.</td></tr>
+</table>
+
+<div class="callout warning">
+    <strong>Critical parallel:</strong> A Windows-specific bug causing heap corruption that affected hundreds of users; devs couldn't reproduce. Only fixed by a Windows update. The 26200 build (25H2 preview) may have similar regressions in the heap manager.
+</div>
+
+<h3>Case #8: LWJGL Forum — tlf30 heap corruption + Vulkan</h3>
+<table>
+    <tr><td>Link</td><td><a href="http://forum.lwjgl.org/index.php?topic=7233.0">forum.lwjgl.org</a></td></tr>
+    <tr><td>Exception</td><td><code>c0000374</code> + <code>c0000005</code></td></tr>
+    <tr><td>Root cause</td><td>Mixed allocator — <code>VkBuffer</code> mapped via JNI, freed via LWJGL jemalloc</td></tr>
+    <tr><td>Resolution</td><td><span class="tag fixed">FIXED</span> Discovered via LWJGLX Debug Agent</td></tr>
+</table>
+<p><strong>Connection to PZ:</strong> Intermittent crashes after "thousands of operations" — matches PZ symptom description perfectly.</p>
+
+<h3>Case #9: Microsoft Q&A — ntdll.dll crashing Java apps after 24H2 upgrade</h3>
+<table>
+    <tr><td>Link</td><td><a href="https://learn.microsoft.com/en-us/answers/questions/3892641/ntdll-dll-file-is-causing-an-error-crashing-the-ap">Microsoft Q&A</a></td></tr>
+    <tr><td>Exception</td><td><code>c0000005</code> — ntdll.dll version <code>10.0.26100.3323</code></td></tr>
+    <tr><td>Report</td><td>"Java and 24h2 aren't working very well" (user quote, March 2025)</td></tr>
+    <tr><td>Resolution</td><td><span class="tag closed">UNRESOLVED</span> Microsoft support suggested compatibility mode or rollback to 23H2.</td></tr>
+</table>
+
+<div class="callout danger">
+    <strong>Direct confirmation:</strong> Build 26100 has known issues with Java applications using JNI. One year before PZ crashes were documented, this was already reported.
+</div>
+
+<h3>Synthesis — Recurring Pattern</h3>
+<table>
+    <tr><th>Case</th><th>Allocator A</th><th>Allocator B</th><th>Result</th></tr>
+    <tr><td>#1 LWJGL #775</td><td><code>allocateDirect()</code> (system)</td><td><code>free()</code> (jemalloc)</td><td><code>c0000374</code></td></tr>
+    <tr><td>#2 LWJGL #209</td><td>stb <code>malloc</code> (system)</td><td><code>free</code> via jemalloc</td><td><code>c0000005</code></td></tr>
+    <tr><td>#8 tlf30 Forum</td><td><code>VkBuffer</code> mapping (JNI)</td><td><code>MemoryUtil.free()</code> (jemalloc)</td><td><code>c0000374</code></td></tr>
+    <tr><td><strong>PZ (hypothesis)</strong></td><td><code>GetPrimitiveArrayCritical</code> (system)</td><td>LWJGL buffer management (jemalloc)</td><td><code>c0000374</code></td></tr>
+</table>
+
+<p>The recurring theme is <strong>always mixed allocator</strong>: allocate with system allocator and free with jemalloc (or vice versa). jemalloc on Windows is particularly fragile in this scenario, and the race condition in TSD initialization amplifies the problem when multiple threads are involved.</p>
+
+<!-- ═══════════════════════════════════════════ -->
+<h2 id="current-status">Current Status</h2>
+
+<h3>What We Know</h3>
+<ol>
+    <li><strong>AMD OpenGL driver (<code>atio6axx.dll</code>, Adrenalin 26.1.1, Dec/2025) has a confirmed buffer overrun</strong> — writes 4 bytes past end of buffer during <code>glGetInteger</code> at <code>InitDisplay</code>. This is the most likely primary root cause.</li>
+    <li><strong>PageHeap successfully revealed the crash source</strong> — without it, the off-by-one silently corrupted heap data, causing delayed <code>c0000374</code> crashes.</li>
+    <li><strong>The original <code>c0000374</code> crashes were likely caused by this AMD driver corruption</strong> manifesting later through jemalloc/system allocator interactions.</li>
+    <li><strong>ntdll.dll build 26100 on OS build 26200</strong> confirmed in two independent environments (Will and SemaGD) — this mismatch may amplify heap instability.</li>
+    <li><strong>Windows 24H2 (build 26100) has documented issues with Java JNI applications</strong> (Microsoft Q&A Case #9).</li>
+    <li><strong>jemalloc has multiple unpatched race conditions on Windows</strong>, exacerbated in multi-threaded initialization (Cases #3, #4, #5).</li>
+    <li><strong>Mixed allocator</strong> (system allocator + jemalloc) is a common cause of <code>c0000374</code> in LWJGL applications (Cases #1, #2, #8).</li>
+    <li><strong>Disabling jemalloc and/or updating AMD drivers</strong> may significantly reduce crash frequency.</li>
+</ol>
+
+<h3>What We Do Not Know (Yet)</h3>
+<ol>
+    <li><strong>Why does <code>glfw.dll</code> trigger <code>RtlReAllocateHeap</code> at 4 seconds?</strong> Is GLFW's heap operation tripping over the AMD driver's earlier corruption, or is there a separate GLFW bug?</li>
+    <li><strong>Why does <code>jvm.dll</code> trigger <code>RtlFreeHeap</code> at 20 seconds?</strong> Is the JVM freeing memory corrupted by the AMD driver's off-by-one earlier in init?</li>
+    <li><strong>Why does Kolopis crash even with <code>allocator=system</code>?</strong> Could he also have an AMD GPU with the same driver bug? His ntdll (build 19041) is different.</li>
+    <li><strong>Is the AMD driver bug universal to all AMD GPUs, or specific to the RX 590 / certain driver versions?</strong></li>
+</ol>
+
+<h3>User Impact Summary</h3>
+<table>
+    <tr><th>User</th><th>GPU</th><th>OS Build</th><th>ntdll Build</th><th>With <code>allocator=system</code></th><th>Status</th></tr>
+    <tr><td>Will (investigator)</td><td>AMD RX 590</td><td>26200</td><td>26100</td><td><span class="badge-status partial">Reduced</span></td><td>Root cause identified via PageHeap</td></tr>
+    <tr><td>SemaGD</td><td>AMD</td><td>26200</td><td>26100</td><td><span class="badge-status partial">2 sessions OK</span></td><td>Needs AMD driver version check</td></tr>
+    <tr><td>Kolopis</td><td>Unknown</td><td>19045</td><td>19041</td><td><span class="badge-status no">Still crashed</span></td><td>Needs GPU + driver check</td></tr>
+</table>
+
+<!-- ═══════════════════════════════════════════ -->
+<h2 id="related-conversation">Supplementary Analysis — Conversation Transcript</h2>
+<p class="section-desc">The following summarizes key technical discussions from the bug tracking investigation, covering ZGC/jemalloc/LWJGL interactions, crash analysis, and script development.</p>
+
+<h3>Jemalloc &amp; ZGC in Java Games with LWJGL</h3>
+<p>The investigation opened with a technical discussion about whether jemalloc can conflict with ZGC in Java games using LWJGL. Key conclusions:</p>
+<ul>
+    <li><strong>ZGC and jemalloc operate in separate memory spaces</strong> — ZGC manages the JVM heap, jemalloc manages native memory. They do not directly interact.</li>
+    <li><strong>The real conflict is mixed allocator:</strong> code that allocates native buffers via one allocator and frees via another. LWJGL defaults to jemalloc, but game code (or JNI operations) may use the system allocator.</li>
+    <li><strong>ZGC generational (Java 21+) has less tolerance for pinned objects</strong> in the young generation, which can amplify the issue when JNI pins objects during native operations.</li>
+</ul>
+
+<h3>Crash Analysis — IsoMetaGrid Exception</h3>
+<p>During testing, a separate Java exception was captured:</p>
+<pre><code>java.lang.IllegalArgumentException: newLimit < 0: (-1 < 0)
+    at java.base/java.nio.Buffer.createLimitException(Unknown Source)
+    at java.base/java.nio.Buffer.limit(Unknown Source)
+    at zombie.iso.IsoMetaGrid.load(IsoMetaGrid.java:1080)</code></pre>
+<p>This is a <strong>separate bug</strong> from the heap corruption — a corrupted save file or incompatible mod causing a negative buffer limit. Not related to jemalloc or the AMD driver.</p>
+
+<h3>Tracking Script Development</h3>
+<p>The investigator created several iterations of the crash tracking batch script:</p>
+<ol>
+    <li><strong>Original:</strong> Redirected stderr only via <code>2>"%LOGFILE%"</code></li>
+    <li><strong>Improved:</strong> Captures stdout + stderr via <code>> "%LOGFILE%" 2>&1</code></li>
+    <li><strong>Full tracking:</strong> Added <code>-XX:+CreateCoredumpOnCrash</code>, <code>-XX:ErrorFile</code>, GC logging, and WER LocalDumps configuration</li>
+</ol>
+
+<h3>ntdll Mismatch Discovery</h3>
+<p>System file analysis revealed:</p>
+<ul>
+    <li>OS build: <strong>26200</strong> (25H2 preview, via KB5054156 enablement package on March 10)</li>
+    <li>ntdll.dll (64-bit): <strong>10.0.26100.8521</strong> (left behind from 24H2 GA)</li>
+    <li>ntdll.dll (32-bit): <strong>10.0.26100.8328</strong> (also from 24H2)</li>
+</ul>
+<p>DISM was run — did not alter ntdll. The mismatch persists even after system file repair.</p>
+
+<h3>SemaGD Dump Analysis (cdb.exe)</h3>
+<p>Two dumps analyzed — both confirmed ntdll 26100 on OS 26200, both <code>c0000374</code> with AMD GPU drivers loaded. Neither showed jemalloc in the stack.</p>
+
+<h3>GFlags PageHeap Setup</h3>
+<ul>
+    <li><strong>Tool:</strong> <code>gflags.exe</code> from Debugging Tools for Windows (Windows SDK 10.0.28000.2270)</li>
+    <li><strong>Location:</strong> <code>C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\gflags.exe</code></li>
+    <li><strong>Command:</strong> <code>gflags /p /enable java.exe</code> (Standard PageHeap)</li>
+    <li><strong>Purpose:</strong> Forces crash at the exact instruction that corrupts heap, providing clean stack trace instead of <code>StackHash_8486</code></li>
+</ul>
+
+<h3>AMD Driver Crash (PageHeap Result)</h3>
+<p>The first run with PageHeap active produced a 1.57 GB core dump at ~3 seconds. The crash was in <code>atio6axx.dll</code> (AMD OpenGL driver, Adrenalin 26.1.1) — an off-by-one buffer overrun during <code>glGetInteger</code> in <code>GameWindow.InitDisplay</code>.</p>
+<p>The AMD RX 590 driver was identified as version <code>31.0.21924.61</code>, built December 11, 2025, in the <code>DriverStore</code> path.</p>
+
+<!-- ═══════════════════════════════════════════ -->
+<h2 id="tools">Investigation Tools</h2>
+
+<h3>Scripts Created</h3>
+<ol>
+    <li><strong><code>ProjectZomboid64-nojemalloc-debug-full-log.bat</code></strong> — Main tracking script with allocator override, debug logging, crash dumps, GC logs, and WER LocalDumps.</li>
+    <li><strong>Log location:</strong> <code>D:\SteamLibrary\steamapps\common\ProjectZomboid\.crashes-tracking\</code></li>
+    <li><strong>Minidumps:</strong> <code>.crashes-tracking\dumps\</code></li>
+</ol>
+
+<h3>GFlags (PageHeap) Configuration</h3>
+<table>
+    <tr><td>Tool</td><td><code>gflags.exe</code> from Debugging Tools for Windows (Windows SDK)</td></tr>
+    <tr><td>Location</td><td><code>C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\gflags.exe</code></td></tr>
+    <tr><td>Configuration</td><td>Standard PageHeap enabled for <code>java.exe</code></td></tr>
+    <tr><td>Purpose</td><td>Forces crash at the exact instruction that corrupts the heap, providing clean stack trace</td></tr>
+</table>
+
+<h3>Debugging Tools</h3>
+<ul>
+    <li><strong><code>cdb.exe</code></strong> (WinDbg CLI) — available at <code>C:\Users\Will\Desktop\dump analysis\cdb.exe</code></li>
+    <li>Symbols loaded from Microsoft Symbol Server (<code>srv*C:\symbols*http://msdl.microsoft.com/download/symbols</code>)</li>
+</ul>
+
+<!-- ═══════════════════════════════════════════ -->
+<h2 id="recommendations">Recommendations for The Indie Stone</h2>
+
+<h3>Short Term (Community Workaround)</h3>
+<ol>
+    <li><strong>Update AMD GPU drivers to the latest version.</strong> The AMD OpenGL driver (Adrenalin 26.1.1, Dec/2025) shows a buffer overrun in <code>glGetInteger</code> during <code>InitDisplay</code>. Check <a href="https://www.amd.com/en/support">amd.com/en/support</a> for the latest Adrenalin driver.</li>
+    <li><strong><code>-Dorg.lwjgl.system.allocator=system</code></strong> — officially documented by LWJGL, safe to use. While not a root cause fix, it reduces crash manifestations.</li>
+    <li><strong><code>-XX:+UseZGC -XX:-ZGenerational</code></strong> — For users who must use jemalloc, disabling generational ZGC may help (non-generational has better tolerance for pinned objects).</li>
+    <li><strong>Windows Update.</strong> Affected users should ensure Windows is fully updated. An in-place upgrade may resolve ntdll mismatches.</li>
+</ol>
+
+<h3>Medium Term (TIS Investigation)</h3>
+<ol>
+    <li><strong>Test on multiple GPU vendors</strong> — Determine if the crash occurs on NVIDIA and Intel GPUs, or if it's AMD-specific.</li>
+    <li><strong>Reproduce on clean Windows 11 24H2 (build 26100) with updated AMD drivers</strong> — If the crash disappears with newer drivers, the root cause is confirmed.</li>
+    <li><strong>Investigate <code>glGetInteger</code> calls during <code>InitDisplay</code></strong> — Which specific GL queries are made? Could the game query a deprecated or extension-specific value that causes the AMD driver to misbehave?</li>
+    <li><strong>Investigate GLFW initialization code</strong> — The SemaGD dump showing <code>glfw.dll</code> crashing during <code>RtlReAllocateHeap</code> at 4 seconds may also be AMD driver-related.</li>
+    <li><strong>Review JNI buffer management in native code</strong> — Mixed allocator pattern remains relevant for crashes on non-AMD systems.</li>
+    <li><strong>Consider LWJGL version</strong> — Upstream fixes for jemalloc interaction may be available in newer LWJGL releases.</li>
+    <li><strong>Evaluate Windows 11 25H2 preview compatibility</strong> — ntdll mismatch could become a broader issue as 25H2 approaches GA.</li>
+</ol>
+
+<h3>Long Term (Platform Strategy)</h3>
+<ol>
+    <li><strong>Document minimum GPU driver requirements</strong> for Build 42.</li>
+    <li><strong>Consider bundling an alternative allocator or LWJGL configuration</strong> — System allocator appears more stable on Windows.</li>
+    <li><strong>Monitor jemalloc upstream</strong> — Issues #1317, #2721, and #2724 remain open and unfixed.</li>
+    <li><strong>Documentation for modders</strong> — Mods injecting native code or performing JNI operations should be aware of mixed allocator pitfalls.</li>
+</ol>
+
+<!-- ═══════════════════════════════════════════ -->
+<h2 id="appendices">Appendices</h2>
+
+<h3 id="appendix-gc">Appendix A: GC Arguments Tested</h3>
+<pre><code>-XX:+UseG1GC
+-XX:G1HeapRegionSize=8m
+-XX:InitiatingHeapOccupancyPercent=35
+-XX:G1ReservePercent=15
+-Xmx3072m
+-Xlog:gc*:file=.crashes-tracking/gc.log</code></pre>
+
+<h3 id="appendix-script">Appendix B: Full Tracking Script Parameters</h3>
+<pre><code>-Djava.awt.headless=true
+-Dorg.lwjgl.system.allocator=system
+-Dorg.lwjgl.util.DebugAll=true
+-Dzomboid.steam=1
+-Dzomboid.znetlog=1
+-XX:+CreateCoredumpOnCrash
+-XX:ErrorFile=.crashes-tracking\hs_err_%p.log
+-XX:-OmitStackTraceInFastThrow
+-XX:+UseZGC
+-Xmx3072m</code></pre>
+
+<h3 id="appendix-pageheap">Appendix C: GFlags PageHeap Configuration</h3>
+<pre><code>gflags /p /enable java.exe
+gflags /p  (verify: "java.exe: page heap enabled")
+gflags /p /disable java.exe  (to disable after testing)</code></pre>
+
+<h3 id="appendix-directory">Appendix D: Bug Tracking Directory Structure</h3>
+<pre><code>D:\SteamLibrary\steamapps\common\ProjectZomboid\
+├── .crashes-tracking\
+│   ├── lwjgl_*.log              (LWJGL debug logs)
+│   ├── gc_*.log                 (GC logs)
+│   ├── hs_err_*.log             (JVM crash reports)
+│   └── dumps\                   (Windows minidumps)
+├── ProjectZomboid64.bat                    (original)
+├── ProjectZomboid64-nojemalloc.bat         (with allocator=system only)
+├── ProjectZomboid64-nojemalloc-debug.bat   (with debug logging)
+└── ProjectZomboid64-nojemalloc-debug-full-log.bat  (full tracking)</code></pre>
+
+<!-- ── Footer ── -->
+<hr>
+
+<h3>Contact</h3>
+<p>For questions, additional data, or to coordinate testing:</p>
+<ul>
+    <li><strong>Investigator:</strong> Will (community modder, PZMC)</li>
+    <li><strong>Discord thread:</strong> Bug tracking channel in Project Zomboid Modding Community</li>
+    <li><strong>TIS contact:</strong> Ash (acknowledged investigation, offered testing support)</li>
+</ul>
+
+<p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 3rem;">
+    <em>This document was generated from the investigation files on June 27, 2026. Contains all data from both <code>context.md</code> and <code>PZ_Crash_Investigation_Report_for_TIS.md</code>. No content omitted.</em>
+</p>
+
+</main>
+</div>
+</body>
+</html>
