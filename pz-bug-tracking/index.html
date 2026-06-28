@@ -964,6 +964,33 @@
         </table>
       </div>
 
+      <h4>Why the Allocator Change Has Any Effect at All</h4>
+
+      <p>Understanding the impact of <code>-Dorg.lwjgl.system.allocator=system</code> requires understanding how jemalloc and HeapAlloc differ in their physical memory layout — not just their performance characteristics.</p>
+
+      <p><b>jemalloc</b> groups allocations by size class into contiguous slabs, placing objects of the same size directly adjacent in memory. Crucially, all heap metadata (occupancy bitmaps, slab counters, free-list pointers) is stored in <em>separate</em> regions, completely outside the object data range. The result: a single byte written past a buffer boundary lands immediately on the next live object in the slab, with no intervening structure to absorb it.</p>
+
+      <pre><span class="comment">// jemalloc slab — size class 40 bytes</span>
+[ obj A: 33b used | 7b padding ][ obj B: 40b ][ obj C: 40b ] ...
+<span class="hl">                               ↑</span>
+<span class="hl">          write of 34th byte lands here — next live object</span>
+<span class="hl">          corruption is immediate and silent</span></pre>
+
+      <p><b>HeapAlloc</b> (Windows system allocator) stores metadata <em>inline</em> — a header block containing size, status flags, and free-list linkage sits between every allocation. A one-byte overrun typically lands in this header rather than in another object's data. The header is only read when that block is freed or reallocated, so the process continues running until the corrupted block is touched — which may be seconds or minutes later.</p>
+
+      <pre><span class="comment">// HeapAlloc layout</span>
+[ header 8b | obj A: 33b | align pad ][ header 8b | obj B ... ]
+<span class="hl">                          ↑</span>
+<span class="hl">        write of 34th byte lands in padding / next header</span>
+<span class="hl">        crash deferred until that block is freed or reallocated</span></pre>
+
+      <div class="callout finding">
+        <div class="callout-label">Why ntdll.dll Appeared as the Crash Site</div>
+        <p>This is why every early crash report pointed to <code>ntdll!RtlFreeHeap</code> or <code>ntdll!RtlReAllocateHeap</code> — and why <code>atio6axx.dll</code> was absent from all traces. Under jemalloc, the AMD driver's overrun landed directly on a neighbor object in the slab. By the time the JVM or GLFW tried to operate on that object, the driver's call frame had long since returned and been wiped from the stack. The crash occurred at the <em>consumer</em> of the corrupted memory (<code>ntdll</code>), not at the <em>writer</em> (<code>atio6axx.dll</code>). This is why all initial reports appeared to describe different bugs — the victim object varied by session, making each trace look distinct even though the corruption source was always the same.</p>
+      </div>
+
+      <p>Switching to HeapAlloc does not fix the AMD driver overrun. It changes <em>when</em> and <em>where</em> the crash surfaces: instead of silently poisoning an adjacent object that crashes much later, the stray write goes into a header that fails on the next heap operation involving that specific block. This is worse for stability in the general case (the bug is still present) but was a necessary intermediate step — it was what made PageHeap viable and what shifted the investigation toward the true source.</p>
+
       <div class="callout warning">
         <div class="callout-label">Conclusion</div>
         <p>Disabling jemalloc reduced gameplay crash frequency for Will and SemaGD but did not eliminate all crashes. Kolopis's continued crashes suggest either a separate compounding factor, or that the AMD driver overrun is severe enough in his environment to cause crashes regardless of allocator. The jemalloc amplification hypothesis is <b>probable but still under multi-user verification</b>.</p>
