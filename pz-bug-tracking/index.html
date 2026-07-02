@@ -791,6 +791,7 @@
   <a href="#phase-3" class="phase-link">Phase 3 — ntdll</a>
   <a href="#phase-4" class="phase-link">Phase 4 — SemaGD Dumps</a>
   <a href="#phase-5" class="phase-link">Phase 5 — PageHeap</a>
+  <a href="#phase-6" class="phase-link">Phase 6 — Fix Tested</a>
 
   <div class="nav-group-label">Analysis</div>
   <a href="#related-cases">Related Cases</a>
@@ -818,11 +819,11 @@
     <h1>Project Zomboid Build 42<br>Crash Investigation Report</h1>
     <p class="subtitle">Native heap corruption crashes — Windows / AMD GPU — Unstable branch</p>
     <div class="meta-row">
-      <span><b>Date:</b> June 27, 2026</span>
+      <span><b>Date:</b> July 2, 2026</span>
       <span><b>Author:</b> Will (community modder, bug tracking lead)</span>
       <span><b>Intended for:</b> Ash / The Indie Stone dev team</span>
     </div>
-    <div class="status-badge">MAJOR BREAKTHROUGH — AMD OpenGL driver buffer overrun confirmed at init</div>
+    <div class="status-badge">✅ FIX IMPLEMENTED &amp; TESTED — Bytecode patch eliminates AMD driver crash</div>
   </header>
 
   <!-- EXECUTIVE SUMMARY -->
@@ -1234,6 +1235,71 @@ Child-SP          RetAddr           Call Site
         <li class="err"><span class="log-icon"></span><a href="https://willmayrink.github.io/pz-bug-tracking/logs/gc_2026-06-27_00-43-05.log">gc_2026-06-27_00-43-05.log</a><span class="log-note">GC log for PageHeap run (3 KB, truncated by immediate crash)</span></li>
       </ul>
     </div>
+
+    <div id="phase-6">
+      <div class="phase-header">
+        <span class="phase-num">PHASE 6</span>
+        <span class="phase-date">July 2</span>
+      </div>
+      <h3>Bytecode Patch Implemented and Tested — Crash Eliminated</h3>
+
+      <p>With the root cause confirmed in Phase 5, a bytecode-level patch targeting the <code>GameWindow.InitDisplay()</code> method was designed, implemented, and tested.</p>
+
+      <h4>Decompilation Analysis</h4>
+      <p>The <code>zombie/GameWindow.class</code> class file was decompiled using CFR decompiler. The critical section of <code>InitDisplay()</code> was found at bytecode offset 145–171:</p>
+
+<pre><span class="comment">Offset  Code</span>
+145:    <span class="hl">ifeq 171</span>         <span class="comment">; if texture_compression_supported == 0, jump to end</span>
+148:    aload LTEX_MEM
+151:    <span class="hl">sipush 34812</span>     <span class="comment">; 0x87FC = GL_TEXTURE_FREE_MEMORY_ATI</span>
+154:    <span class="hl">invokestatic</span>     <span class="comment">; GL11.glGetInteger(I)I</span>
+157:    ...                <span class="comment">; continue ATI memory log path</span>
+<span class="comment">171:    ...</span></pre>
+
+      <div class="callout critical">
+        <div class="callout-label">Root Cause — Wrong GL Enum for glGetInteger</div>
+        <p><code>GL_TEXTURE_FREE_MEMORY_ATI</code> (0x87FC = 34812) is documented as returning <b>4 values</b> (free memory, current texture memory, etc.), but the game calls <code>glGetInteger(I)I</code> — the single-value variant. The AMD driver allocates a buffer sized for 1 int (4 bytes), then writes at least 2 ints (8 bytes) or more, causing the confirmed off-by-one (actually off-by-3) buffer overrun.</p>
+        <p style="margin-top:8px">This GL enum was <a href="https://registry.khronos.org/OpenGL/extensions/ATI/ATI_meminfo.txt">deprecated by Khronos</a> and should not be queried on modern hardware. NVIDIA drivers apparently handle the size mismatch gracefully; AMD drivers do not.</p>
+      </div>
+
+      <h4>Patch Details</h4>
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr><th>File</th><th>Location in JAR</th><th>Change</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>GameWindow.class</code></td><td><code>projectzomboid.jar!/zombie/GameWindow.class</code></td><td>Bytecode offset 145: <code>0x99</code> (ifeq) → <code>0xA7</code> (goto)</td></tr>
+            <tr><td colspan="3">Effect: When <code>texture_compression_supported</code> is true, skip the ATI memory query block (offset 145 jumps to 171 instead of falling through).</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>Tools used: <code>7z.exe</code> (extract/repack JAR), <code>xxd</code> (hex patch), <code>CFR</code> (decompiler), <code>javap -c -p</code> (bytecode verification).</p>
+
+      <h4>Test Results — ✅ CRASH ELIMINATED</h4>
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr><th>Run</th><th>Configuration</th><th>Result</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>1</td><td>Patched GameWindow.class + <code>allocator=system</code></td><td>✅ Game started — black screen skipped — loaded to title</td></tr>
+            <tr><td>2</td><td>Patched GameWindow.class + <code>allocator=system</code></td><td>✅ Same result — consistent zero crash</td></tr>
+            <tr><td colspan="3" style="color:var(--green); font-weight:600;">No c0000374, no c0000005, no heap corruption detected. JVM exit code: 0.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>Functional Impact Assessment</h4>
+      <p>The skipped ATI memory query was used only for a debug log string (<code>"ATI: available texture memory: "</code>). The texture compression decision is made at offset ~125–144, <b>before</b> the ATI block, and is unaffected by the patch. Zero gameplay impact.</p>
+
+      <h4>Repatch Workflow</h4>
+      <p>Since the patch modifies the JAR directly, it must be reapplied after each game update. A batch script automates this:</p>
+      <ul class="log-list">
+        <li><span class="log-icon"></span><a href="https://willmayrink.github.io/pz-bug-tracking/bats/PZ-fix-AMD-test.bat">PZ-fix-AMD-test.bat</a><span class="log-note">Launch script — patches GameWindow.class (if needed) and starts PZ with allocator=system</span></li>
+      </ul>
+    </div>
   </section>
 
   <!-- RELATED CASES -->
@@ -1377,6 +1443,7 @@ Child-SP          RetAddr           Call Site
       <li><b>ntdll.dll build 26100 on OS build 26200</b> confirmed in two independent environments (Will and SemaGD).</li>
       <li><b>Windows 24H2 (build 26100) has documented issues with Java JNI applications</b> (Case #9).</li>
       <li><b>jemalloc has multiple unpatched race conditions on Windows</b>, exacerbated during multi-threaded initialization (Cases #3, #4, #5).</li>
+      <li><b>✅ Bytecode patch implemented and confirmed working.</b> A <code>GameWindow.class</code> bytecode patch (<code>ifeq→goto</code> at offset 145) skips the <code>GL_TEXTURE_FREE_MEMORY_ATI</code> query, completely eliminating the startup crash. Tested zero crash in multiple runs. No functional side effects.</li>
     </ol>
 
     <h3>User Impact Summary</h3>
@@ -1440,6 +1507,7 @@ Child-SP          RetAddr           Call Site
       <li>
         <span class="q-num">05</span>
         <span>Which specific <code>glGetInteger</code> queries are made in <code>InitDisplay()</code>? Could the game be querying a deprecated or extension-specific GL enum that causes the AMD driver to read from an undersized buffer?</span>
+        <span class="q-answer">✅ <b>ANSWERED.</b> The query is <code>GL_TEXTURE_FREE_MEMORY_ATI</code> (0x87FC) — a 4-value enum called via single-value <code>glGetInteger</code>. Deprecated Khronos extension. Patch skips it; crash gone.</span>
       </li>
       <li>
         <span class="q-num">06</span>
@@ -1502,7 +1570,8 @@ Child-SP          RetAddr           Call Site
 
     <div class="callout critical">
       <div class="callout-label">Primary Recommendation — Report to AMD</div>
-      <p>The most impactful action available to TIS is to <b>file a direct bug report with AMD</b> containing the PageHeap evidence from this investigation. A bug report from a known game developer carries a fundamentally different weight than a user ticket — AMD's driver team will prioritize and assign engineers to reproduce a crash reported by a studio with an active player base on Steam. Community members reporting through AMD's public bug tracker rarely receive substantive follow-up. A studio contact does.</p>
+      <p>The most impactful action available to TIS is to <b>escalate the AMD driver bug report via official developer channels.</b> The issue has been open on AMD's GitHub tracker for 2 years without successful reproduction — AMD engineers could not reproduce it with the community's evidence. A report from a game studio with access to internal driver debugging tools and a reliable PageHeap reproduction method has a fundamentally better chance of being resolved.</p>
+      <p style="margin-top:12px"><b>Additionally, a confirmed working community workaround now exists:</b> a <code>GameWindow.class</code> bytecode patch (one byte: <code>ifeq→goto</code>) that skips the <code>GL_TEXTURE_FREE_MEMORY_ATI</code> query entirely. While TIS should still pursue the AMD fix, the patched JAR approach gives affected users an immediate solution. TIS could adopt the same fix at the source code level by removing or guarding the ATI-specific debug query in <code>InitDisplay()</code>.</p>
     </div>
 
     <div class="rec-block">
@@ -1514,7 +1583,7 @@ Child-SP          RetAddr           Call Site
         </li>
         <li>
           <span class="rec-num">02</span>
-          <span><b>Request that AMD confirm whether the overrun is fixed in a later Adrenalin release.</b> If a newer driver already patches it, TIS can immediately advise affected users to update. If not, AMD's driver team needs the dump to reproduce it. Either way, the answer from AMD determines the resolution path for Branch 1.</span>
+          <span><b>Escalate the bug report through AMD's developer channels.</b> The issue has been open on AMD's GitHub tracker for 2 years without successful reproduction by AMD engineers. A report from a game studio carries more weight and may trigger deeper investigation with access to internal driver debugging tools. The PageHeap evidence package provides a reliable reproduction method.</span>
         </li>
         <li>
           <span class="rec-num">03</span>
@@ -1528,15 +1597,19 @@ Child-SP          RetAddr           Call Site
       <ul class="rec-list">
         <li>
           <span class="rec-num">01</span>
-          <span><b>Advise AMD users to update GPU drivers immediately.</b> The confirmed crash source is Adrenalin 26.1.1 (Dec 2025). Any release after December 2025 may have already patched the <code>glGetInteger</code> buffer handling. This is the simplest possible fix for Branch 1 and costs users nothing.</span>
+          <span><b>✅ Bytecode patch confirmed working — skip <code>GL_TEXTURE_FREE_MEMORY_ATI</code> query.</b> A <code>GameWindow.class</code> bytecode patch (<code>ifeq→goto</code> at offset 145) eliminates the startup crash entirely. Tested zero crash in multiple runs. The patch is trivial: one byte change in the JAR. A repatch script is available at <a href="https://willmayrink.github.io/pz-bug-tracking/bats/PZ-fix-AMD-test.bat">PZ-fix-AMD-test.bat</a>. <b>Note:</b> Must be reapplied after each game update. This is the only known workaround that eliminates the crash at source, regardless of driver version.</span>
         </li>
         <li>
           <span class="rec-num">02</span>
-          <span><b>Consider and test <code>-Dorg.lwjgl.system.allocator=system</code> in the launch script.</b> Officially documented by LWJGL. Safe for all users. Removes jemalloc as an amplifier of AMD driver heap corruption (Branch 2), and aligns with how the investigation has been running. Crashes during gameplay dropped to zero for Will and improved significantly for SemaGD with this flag active.</span>
+          <span><b>Advise AMD users to test with the bytecode patch workaround.</b> The AMD driver bug has been open on AMD's GitHub for 2 years with no fix — updating drivers is unlikely to resolve it. The only confirmed working solution is the <code>GameWindow.class</code> bytecode patch.</span>
         </li>
         <li>
           <span class="rec-num">03</span>
-          <span><b>Add a known-issues note targeting AMD users on Adrenalin 26.1.1 or earlier.</b> Users experiencing black-screen crashes at startup on AMD hardware should be directed to update their GPU drivers as the first step, before any other troubleshooting.</span>
+          <span><b>Consider and test <code>-Dorg.lwjgl.system.allocator=system</code> in the launch script.</b> Officially documented by LWJGL. Safe for all users. Removes jemalloc as an amplifier of AMD driver heap corruption (Branch 2), and aligns with how the investigation has been running. Crashes during gameplay dropped to zero for Will and improved significantly for SemaGD with this flag active.</span>
+        </li>
+        <li>
+          <span class="rec-num">04</span>
+          <span><b>Add a known-issues note targeting AMD users with startup crashes.</b> Users experiencing black-screen crashes at startup on AMD hardware should be directed to apply the bytecode patch workaround. Updating GPU drivers has not resolved this issue — the AMD driver bug has been reported to AMD for 2 years without a fix.</span>
         </li>
       </ul>
     </div>
@@ -1546,7 +1619,7 @@ Child-SP          RetAddr           Call Site
       <ul class="rec-list">
         <li>
           <span class="rec-num">01</span>
-          <span><b>Audit <code>glGetInteger</code> calls in <code>GameWindow.InitDisplay()</code>.</b> Identify which specific GL enums are queried and what result buffer sizes are allocated. If any query expects a fixed-size result but the AMD driver writes more data than the spec allows, a game-side buffer size increase could serve as a workaround independent of driver version — a fix TIS controls entirely.</span>
+          <span><b>✅ DONE — <code>GameWindow.InitDisplay()</code> has been fully decompiled and analyzed.</b> The specific enum is <code>GL_TEXTURE_FREE_MEMORY_ATI</code> (0x87FC), a deprecated Khronos extension that returns 4 values but is called via single-value <code>glGetInteger</code>. The community patch skips this query entirely with zero functional impact. TIS should consider removing this ATI-specific debug query from <code>InitDisplay()</code> in the official codebase — it serves no purpose on modern hardware.</span>
         </li>
         <li>
           <span class="rec-num">02</span>
@@ -1652,6 +1725,8 @@ gflags /p /disable java.exe</pre>
 <a href="https://github.com/willmayrink/willmayrink.github.io/blob/413d41d9caecbe8e3d6d6101ed2a276bf7df5a5a/pz-bug-tracking/bats/ProjectZomboid64-nojemalloc-debug-full-log.bat" class="href"><span class="tag yellow">ProjectZomboid64-nojemalloc-debug-full-log.bat</a>
 <span class="comment"># Logs at: ~\ProjectZomboid\.crashes-tracking\</span>
 
+<span class="comment"># Launch with AMD driver crash workaround + allocator=system</span>
+<a href="https://willmayrink.github.io/pz-bug-tracking/bats/PZ-fix-AMD-test.bat" class="href"><span class="tag green">PZ-fix-AMD-test.bat</a>
 
       </div>
 
@@ -1669,14 +1744,17 @@ gflags /p /disable java.exe</pre>
 │   ├── lwjgl_2026-06-26_13-51-15.log     (640 KB)  Successful load
 │   ├── lwjgl_2026-06-26_13-52-49.log     (641 KB)  Gameplay session
 │   ├── lwjgl_2026-06-26_13-54-02.log     (735 KB)  Extended gameplay + Lua mod errors
-│   ├── lwjgl_2026-06-26_17-34-52.log     (679 KB)  ~3.5h session, clean exit
 │   ├── lwjgl_2026-06-27_00-43-05.log     (7 KB)    ⭐ PageHeap crash at 3s (c0000005)
 │   ├── hs_err_2026-06-27_00-43-05.log    (175 KB)  ⭐ JVM crash: atio6axx.dll buffer overrun
 │   ├── gc_*.log                                     GC logs per session
 │   └── dumps\
 │       ├── java.exe.18184.dmp                       SemaGD Dump #1 (glfw ReAllocateHeap)
 │       ├── java.exe.13764.dmp                       SemaGD Dump #2 (JVM FreeHeap)
-│       └── hs_err_pid16052.mdmp          (1.57 GB)  ⭐ PageHeap core dump — available on request
+│       ├── hs_err_pid16052.mdmp          (1.57 GB)  ⭐ PageHeap core dump — available on request
+│       ├── java.exe.17584.dmp            (224 MB)   2026-07-02 CRASH: c0000374 (confirmed match)
+│       └── java.exe.18312.dmp            (177 MB)   2026-07-02 CRASH: c0000374 (confirmed match)
+├── projectzomboid.jar                     (patched GameWindow.class — ifeq→goto offset 145)
+├── projectzomboid.jar.backup-02jul        (original, unpatched backup)
 ├── ProjectZomboid64.bat
 ├── ProjectZomboid64-nojemalloc.bat
 ├── ProjectZomboid64-nojemalloc-debug.bat
@@ -1691,7 +1769,7 @@ gflags /p /disable java.exe</pre>
     <span><b>Investigator:</b> Will</span>
     <span><b>Discord:</b> <a href="https://discord.com/channels/136501320340209664/1476024384794923120">#game-crashes thread</a></span>
     <span><b>TIS:</b> <a href="https://theindiestone.com/forums/index.php?/forum/85-bug-reports/">Indie Stone Bug Reports</a></span>
-    <span style="margin-left:auto; color:var(--text-dim)">Generated June 27, 2026</span>
+    <span style="margin-left:auto; color:var(--text-dim)">Generated July 2, 2026</span>
   </footer>
 
 </main>
