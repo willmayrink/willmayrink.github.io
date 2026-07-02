@@ -791,7 +791,7 @@
   <a href="#phase-3" class="phase-link">Phase 3 — ntdll</a>
   <a href="#phase-4" class="phase-link">Phase 4 — SemaGD Dumps</a>
   <a href="#phase-5" class="phase-link">Phase 5 — PageHeap</a>
-  <a href="#phase-6" class="phase-link">Phase 6 — Fix Tested</a>
+      <a href="#phase-6" class="phase-link">Phase 6 — Testing Phase</a>
 
   <div class="nav-group-label">Analysis</div>
   <a href="#related-cases">Related Cases</a>
@@ -823,7 +823,7 @@
       <span><b>Author:</b> Will (community modder, bug tracking lead)</span>
       <span><b>Intended for:</b> Ash / The Indie Stone dev team</span>
     </div>
-    <div class="status-badge">✅ FIX IMPLEMENTED &amp; TESTED — Bytecode patch eliminates AMD driver crash</div>
+    <div class="status-badge">🧪 PATCH IMPLEMENTED — In testing phase — preliminary results positive</div>
   </header>
 
   <!-- EXECUTIVE SUMMARY -->
@@ -1241,7 +1241,7 @@ Child-SP          RetAddr           Call Site
         <span class="phase-num">PHASE 6</span>
         <span class="phase-date">July 2</span>
       </div>
-      <h3>Bytecode Patch Implemented and Tested — Crash Eliminated</h3>
+      <h3>Bytecode Patch Implemented — Testing Phase</h3>
 
       <p>With the root cause confirmed in Phase 5, a bytecode-level patch targeting the <code>GameWindow.InitDisplay()</code> method was designed, implemented, and tested.</p>
 
@@ -1277,7 +1277,7 @@ Child-SP          RetAddr           Call Site
 
       <p>Tools used: <code>7z.exe</code> (extract/repack JAR), <code>xxd</code> (hex patch), <code>CFR</code> (decompiler), <code>javap -c -p</code> (bytecode verification).</p>
 
-      <h4>Test Results — ✅ CRASH ELIMINATED</h4>
+      <h4>📋 Testing Phase — Preliminary Results</h4>
       <div class="tbl-wrap">
         <table>
           <thead>
@@ -1286,7 +1286,7 @@ Child-SP          RetAddr           Call Site
           <tbody>
             <tr><td>1</td><td>Patched GameWindow.class + <code>allocator=system</code></td><td>✅ Game started — black screen skipped — loaded to title</td></tr>
             <tr><td>2</td><td>Patched GameWindow.class + <code>allocator=system</code></td><td>✅ Same result — consistent zero crash</td></tr>
-            <tr><td colspan="3" style="color:var(--green); font-weight:600;">No c0000374, no c0000005, no heap corruption detected. JVM exit code: 0.</td></tr>
+            <tr><td colspan="3" style="color:var(--yellow); font-weight:600;">⚠️ Preliminary — more testing needed: without allocator=system, extended gameplay, multiple sessions.</td></tr>
           </tbody>
         </table>
       </div>
@@ -1443,7 +1443,7 @@ Child-SP          RetAddr           Call Site
       <li><b>ntdll.dll build 26100 on OS build 26200</b> confirmed in two independent environments (Will and SemaGD).</li>
       <li><b>Windows 24H2 (build 26100) has documented issues with Java JNI applications</b> (Case #9).</li>
       <li><b>jemalloc has multiple unpatched race conditions on Windows</b>, exacerbated during multi-threaded initialization (Cases #3, #4, #5).</li>
-      <li><b>✅ Bytecode patch implemented and confirmed working.</b> A <code>GameWindow.class</code> bytecode patch (<code>ifeq→goto</code> at offset 145) skips the <code>GL_TEXTURE_FREE_MEMORY_ATI</code> query, completely eliminating the startup crash. Tested zero crash in multiple runs. No functional side effects.</li>
+      <li><b>🧪 Bytecode patch implemented — in testing phase.</b> A <code>GameWindow.class</code> bytecode patch (<code>ifeq→goto</code> at offset 145) skips the <code>GL_TEXTURE_FREE_MEMORY_ATI</code> query. Preliminary tests show no crash, but extended testing is needed: without <code>allocator=system</code>, prolonged gameplay, and multiple sessions.</li>
     </ol>
 
     <h3>User Impact Summary</h3>
@@ -1571,7 +1571,7 @@ Child-SP          RetAddr           Call Site
     <div class="callout critical">
       <div class="callout-label">Primary Recommendation — Report to AMD</div>
       <p>The most impactful action available to TIS is to <b>escalate the AMD driver bug report via official developer channels.</b> The issue has been open on AMD's GitHub tracker for 2 years without successful reproduction — AMD engineers could not reproduce it with the community's evidence. A report from a game studio with access to internal driver debugging tools and a reliable PageHeap reproduction method has a fundamentally better chance of being resolved.</p>
-      <p style="margin-top:12px"><b>Additionally, a confirmed working community workaround now exists:</b> a <code>GameWindow.class</code> bytecode patch (one byte: <code>ifeq→goto</code>) that skips the <code>GL_TEXTURE_FREE_MEMORY_ATI</code> query entirely. While TIS should still pursue the AMD fix, the patched JAR approach gives affected users an immediate solution. TIS could adopt the same fix at the source code level by removing or guarding the ATI-specific debug query in <code>InitDisplay()</code>.</p>
+      <p style="margin-top:12px"><b>A community workaround has been implemented and is in testing phase:</b> a <code>GameWindow.class</code> bytecode patch (one byte: <code>ifeq→goto</code>) that skips the <code>GL_TEXTURE_FREE_MEMORY_ATI</code> query entirely. Preliminary results show no crash. TIS could adopt the same fix at the source code level by removing or guarding the ATI-specific debug query in <code>InitDisplay()</code>.</p>
     </div>
 
     <div class="rec-block">
@@ -1597,7 +1597,7 @@ Child-SP          RetAddr           Call Site
       <ul class="rec-list">
         <li>
           <span class="rec-num">01</span>
-          <span><b>✅ Bytecode patch confirmed working — skip <code>GL_TEXTURE_FREE_MEMORY_ATI</code> query.</b> A <code>GameWindow.class</code> bytecode patch (<code>ifeq→goto</code> at offset 145) eliminates the startup crash entirely. Tested zero crash in multiple runs. The patch is trivial: one byte change in the JAR. A repatch script is available at <a href="https://willmayrink.github.io/pz-bug-tracking/bats/PZ-fix-AMD-test.bat">PZ-fix-AMD-test.bat</a>. <b>Note:</b> Must be reapplied after each game update. This is the only known workaround that eliminates the crash at source, regardless of driver version.</span>
+          <span><b>🧪 Bytecode patch — in testing phase.</b> A <code>GameWindow.class</code> bytecode patch (<code>ifeq→goto</code> at offset 145) skips the <code>GL_TEXTURE_FREE_MEMORY_ATI</code> query. Preliminary tests show no crash, but more testing is needed. A repatch script is available at <a href="https://willmayrink.github.io/pz-bug-tracking/bats/PZ-fix-AMD-test.bat">PZ-fix-AMD-test.bat</a>. <b>Note:</b> Must be reapplied after each game update.</span>
         </li>
         <li>
           <span class="rec-num">02</span>
