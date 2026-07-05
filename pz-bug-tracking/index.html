@@ -792,6 +792,9 @@
   <a href="#phase-4" class="phase-link">Phase 4 — SemaGD Dumps</a>
   <a href="#phase-5" class="phase-link">Phase 5 — PageHeap</a>
       <a href="#phase-6" class="phase-link">Phase 6 — Testing Phase</a>
+      <a href="#phase-7" class="phase-link">Phase 7 — Root Cause Correction</a>
+      <a href="#phase-8" class="phase-link">Phase 8 — Classloader Bug</a>
+      <a href="#phase-9" class="phase-link">Phase 9 — Extended Validation</a>
 
   <div class="nav-group-label">Analysis</div>
   <a href="#related-cases">Related Cases</a>
@@ -820,10 +823,11 @@
     <p class="subtitle">Native heap corruption crashes — Windows / AMD GPU — Unstable branch</p>
     <div class="meta-row">
       <span><b>Date:</b> July 2, 2026</span>
+      <span><b>Last updated:</b> July 4, 2026</span>
       <span><b>Author:</b> Will (community modder, bug tracking lead)</span>
       <span><b>Intended for:</b> Ash / The Indie Stone dev team</span>
     </div>
-    <div class="status-badge">🧪 PATCH IMPLEMENTED — In testing phase — preliminary results positive</div>
+    <div class="status-badge">🧪 CANDIDATE FIX — root cause confirmed, patch crash-free for 6h with a single tester — awaiting broader community validation</div>
   </header>
 
   <!-- EXECUTIVE SUMMARY -->
@@ -840,7 +844,12 @@
       <p>The AMD OpenGL driver (<code>atio6axx.dll</code>, Adrenalin 26.1.1, built December 2025) writes 4 bytes beyond the end of an allocated buffer during <code>glGetInteger</code> in <code>GameWindow.InitDisplay()</code>. Confirmed via GFlags PageHeap, which forces an immediate <code>c0000005</code> at the exact overrun instruction — revealing the true crash origin instead of the delayed <code>StackHash_8486</code> pattern seen without PageHeap.</p>
     </div>
 
-    <p>A second, likely related branch involves crashes during gameplay that were meaningfully reduced by disabling LWJGL's bundled jemalloc allocator (<code>-Dorg.lwjgl.system.allocator=system</code>). The working hypothesis is that jemalloc amplifies heap corruption seeded by the AMD driver overrun, turning silent corruption into manifest crashes under load. This remains probable but is still being verified across users.</p>
+    <p>A second pattern was also tracked: intermittent crashes during gameplay and world loading that were reduced, but not eliminated, by disabling LWJGL's bundled jemalloc allocator (<code>-Dorg.lwjgl.system.allocator=system</code>). For a long stretch of this investigation the working hypothesis was that jemalloc amplified the corruption seeded by the overrun above. <b>That hypothesis has since been ruled out</b> — see below.</p>
+
+    <div class="callout finding">
+      <div class="callout-label">Root Cause — Reclassified (July 2–3, 2026)</div>
+      <p>Later analysis (Phase 7) reclassifies this from an AMD driver defect to a client-side OpenGL API misuse. <code>GameWindow.InitDisplay()</code> reads the 4-value <code>GL_TEXTURE_FREE_MEMORY_ATI</code> token through the single-value <code>GL11.glGetInteger(int)</code> entry point instead of the correct <code>GL11.glGetIntegerv(int, IntBuffer)</code>. The AMD driver writes exactly the 4 values the Khronos spec says it returns; the buffer supplied by the game is only sized for one. This is not a case of NVIDIA's driver being more lenient — the game's <b>NVIDIA code path is simply written correctly</b>: it queries three separate single-value NVX tokens (<code>GL_NVX_gpu_memory_info</code>), each legitimately retrieved with the single-value <code>glGetInteger</code> accessor, one call per token. The ATI path is the one place the wrong accessor was used for a multi-value token. <b>AMD is exonerated of fault here</b> — the driver behaved exactly as specified; the mismatch is entirely in how Build 42 calls it. This report retains the full investigation trail below, including the branches that pointed at "AMD driver bug," because that path is what led to this finding — but the root cause TIS should act on is the one described here. The bytecode patch built on top of it is a strong single-tester result, not yet a community-validated fix (see <a href="#current-status">Current Status</a>).</p>
+    </div>
   </section>
 
   <!-- TWO BRANCHES -->
@@ -848,19 +857,24 @@
     <div class="section-label">Structure</div>
     <h2>Two Crash Branches</h2>
 
-    <p>The crash population divides cleanly into two patterns. They likely share a root cause (AMD driver heap corruption) but manifest through different mechanisms and require different evidence to resolve.</p>
+    <p>Early in the investigation the crash population appeared to split into two distinct patterns, and for a long stretch of this report they were tracked as separate branches with separate evidence. With the root cause identified in Phase 7, that split collapses: <b>there was only ever one bug.</b> What looked like "Branch 2" was the same overrun surfacing later and through a different consumer, not a second contributing cause.</p>
 
     <div class="branch-grid">
       <div class="branch-card confirmed">
-        <div class="branch-tag">Branch 1 · Confirmed</div>
-        <h3>Init Crash — AMD Driver Buffer Overrun</h3>
-        <p>Crash at black screen / OpenGL init (~3 seconds). Exception <code>c0000005</code>. Source: <code>atio6axx.dll</code> writing 4 bytes past buffer end during <code>glGetInteger</code>. Confirmed via PageHeap. Driver: Adrenalin 26.1.1, Dec 2025.</p>
+        <div class="branch-tag">The Actual Bug · Confirmed &amp; Fixed</div>
+        <h3>Undersized Buffer Passed to <code>glGetInteger</code></h3>
+        <p><code>GameWindow.InitDisplay()</code> queries the 4-value <code>GL_TEXTURE_FREE_MEMORY_ATI</code> token with the single-value <code>glGetInteger</code> accessor. The AMD driver writes all 4 documented values into a buffer sized for 1 — a 12-byte overrun, every time the block runs. Confirmed via PageHeap (Phase 5) and traced to the exact API misuse in Phase 7. A community bytecode patch removing the block has held for 6h across two sessions for a single tester (Phases 6–9); broader validation is still pending.</p>
       </div>
       <div class="branch-card hypothesis">
-        <div class="branch-tag">Branch 2 · Probable Hypothesis</div>
-        <h3>Gameplay Crash — jemalloc Amplification</h3>
-        <p>Intermittent <code>c0000374</code> during world loading and extended sessions. Frequency reduced significantly by switching to system allocator. Hypothesis: jemalloc amplifies AMD driver's silent heap corruption. Still under multi-user verification.</p>
+        <div class="branch-tag">"Branch 2" · Ruled Out as a Separate Cause</div>
+        <h3>Delayed Gameplay Crashes — Same Overrun, Different Timing</h3>
+        <p>Intermittent <code>c0000374</code> during world loading and extended sessions looked, for a while, like a second problem amplified by LWJGL's jemalloc allocator. It wasn't. Switching to the system allocator (<code>HeapAlloc</code>) never removed the overrun — it only changed <em>where</em> the stray write landed (a header field instead of a neighboring object), which changed how soon the corruption surfaced. jemalloc, the allocator choice, GC settings, and the ntdll version were all explored as possible compounding factors and are all <b>ruled out</b> — see the note below.</p>
       </div>
+    </div>
+
+    <div class="callout finding">
+      <div class="callout-label">Methodology Note — What Got Ruled Out, and Why It's Still Here</div>
+      <p>Phases 1 through 4 below chase garbage collection, the jemalloc allocator, and a Windows <code>ntdll.dll</code> version mismatch as candidate causes. None of them turned out to be the bug. Each is kept in this report, marked clearly where it's resolved, because each one is a legitimate step in how the actual root cause (Phase 7) was eventually isolated — and because an accurate QA trail should show the dead ends, not just the ending.</p>
     </div>
   </section>
 
@@ -907,8 +921,8 @@
       <p><b>Changes tested:</b> Switched from ZGC to G1GC via <code>vmargs.json</code>; tuned <code>InitiatingHeapOccupancyPercent=35</code>, <code>G1ReservePercent=15</code>; experimented with <code>-Xmx</code> values (3072m → 8192m).</p>
 
       <div class="callout warning">
-        <div class="callout-label">Conclusion</div>
-        <p>GC tuning alleviated symptoms for some users but did not eliminate crashes. Crashes during the black screen (pre-menu, before significant GC pressure) confirmed that GC was a temporal coincidence rather than a root cause. Hypothesis <b>falsified</b> as primary cause.</p>
+        <div class="callout-label">Conclusion — Ruled Out</div>
+        <p>GC tuning alleviated symptoms for some users but did not eliminate crashes. Crashes during the black screen (pre-menu, before significant GC pressure) confirmed that GC was a temporal coincidence rather than a root cause. Hypothesis <b>falsified</b> as primary cause. (Later confirmed unrelated entirely once the actual bug — Phase 7 — was found and fixed independent of any GC configuration.)</p>
       </div>
 
       <h4>Logs — Phase 1</h4>
@@ -932,7 +946,7 @@
         <span class="phase-num">PHASE 2</span>
         <span class="phase-date">June 25</span>
       </div>
-      <h3>LWJGL / jemalloc Hypothesis — Branch 2</h3>
+      <h3>LWJGL / jemalloc Hypothesis — Explored, Later Ruled Out</h3>
 
       <p>LWJGL bundles jemalloc as its default native memory allocator. Project Zomboid uses LWJGL for OpenGL rendering, input, and window management. The officially documented <code>-Dorg.lwjgl.system.allocator=system</code> JVM flag disables jemalloc and forces the Windows system allocator.</p>
 
@@ -993,8 +1007,8 @@
       <p>Switching to HeapAlloc does not fix the AMD driver overrun. It changes <em>when</em> and <em>where</em> the crash surfaces: instead of silently poisoning an adjacent object that crashes much later, the stray write goes into a header that fails on the next heap operation involving that specific block. This is worse for stability in the general case (the bug is still present) but was a necessary intermediate step — it was what made PageHeap viable and what shifted the investigation toward the true source.</p>
 
       <div class="callout warning">
-        <div class="callout-label">Conclusion</div>
-        <p>Disabling jemalloc reduced gameplay crash frequency for Will and SemaGD but did not eliminate all crashes. Kolopis's continued crashes suggest either a separate compounding factor, or that the AMD driver overrun is severe enough in his environment to cause crashes regardless of allocator. The jemalloc amplification hypothesis is <b>probable but still under multi-user verification</b>.</p>
+        <div class="callout-label">Conclusion — Ruled Out (Phase 7 Update)</div>
+        <p>Disabling jemalloc reduced gameplay crash frequency for Will and SemaGD but did not eliminate crashes, and Kolopis kept crashing regardless of allocator. At the time, this was read as "probable but unverified amplification." With the root cause identified in Phase 7 and the block removed entirely in Phases 6–9, the allocator choice turned out to be irrelevant to whether the crash occurs at all — only to how soon a given corrupted byte gets touched and turns into a visible crash. <b>jemalloc is not a contributing cause.</b> It happened to make the underlying overrun harder to diagnose, nothing more.</p>
       </div>
 
       <h4>Logs — Phase 2</h4>
@@ -1011,7 +1025,7 @@
         <span class="phase-num">PHASE 3</span>
         <span class="phase-date">June 26</span>
       </div>
-      <h3>ntdll.dll Version Mismatch</h3>
+      <h3>ntdll.dll Version Mismatch — Explored, Later Ruled Out</h3>
 
       <p>During system analysis, a version mismatch was discovered in the heap manager DLL on the affected machines.</p>
 
@@ -1045,7 +1059,12 @@
         </table>
       </div>
 
-      <p>Since <code>ntdll.dll</code> contains the Windows heap manager (<code>RtlHeap*</code> functions), running a mismatched version during high-frequency allocator operations may further destabilize the heap under AMD driver corruption. DISM was run — the mismatch persists even after system file repair. This factor is noted in Open Questions rather than stated as a confirmed cause.</p>
+      <p>Since <code>ntdll.dll</code> contains the Windows heap manager (<code>RtlHeap*</code> functions), running a mismatched version during high-frequency allocator operations was suspected of further destabilizing the heap under the AMD driver overrun. DISM was run — the mismatch persists even after system file repair.</p>
+
+      <div class="callout warning">
+        <div class="callout-label">Conclusion — Ruled Out (Phase 7 Update)</div>
+        <p>This mismatch is real and was confirmed in two independent environments (below), but it is <b>not a contributing cause</b>. The definitive fix in Phases 6–9 eliminated all crashes on Will's machine without touching <code>ntdll.dll</code>, its version, or the OS build at all. The mismatch is most likely a genuine but unrelated quirk of the Windows 25H2 preview channel, coincidentally present on the same machines that happened to be running AMD GPUs and hitting the real bug.</p>
+      </div>
 
       <h4>Logs — Phase 3</h4>
       <ul class="log-list">
@@ -1135,7 +1154,7 @@ ucrtbase!free_base+0x1b                 <span class="comment">← CRT free()</sp
 
       <div class="callout finding">
         <div class="callout-label">Critical Observation</div>
-        <p>Neither dump shows jemalloc in the stack. Both heap operations go directly through <code>ucrtbase</code> → <code>ntdll</code> without jemalloc intermediation. Both dumps show AMD GPU drivers (<code>atio6axx</code> + <code>amdxc64</code>). This evidence shifted focus toward the AMD driver as the corruption source.</p>
+        <p>Neither dump shows jemalloc in the stack. Both heap operations go directly through <code>ucrtbase</code> → <code>ntdll</code> without jemalloc intermediation. Both dumps show AMD GPU drivers (<code>atio6axx</code> + <code>amdxc64</code>). This evidence shifted focus toward the AMD driver call site as the corruption source, which is what led to Phase 5's PageHeap test and, eventually, Phase 7's root cause. In hindsight, this observation was really evidence <i>against</i> jemalloc/ntdll being the cause, not evidence implicating them — the corruption was already present regardless of which allocator or heap manager version handled it.</p>
       </div>
 
       <h4>Logs — Phase 4</h4>
@@ -1259,7 +1278,7 @@ Child-SP          RetAddr           Call Site
       <div class="callout critical">
         <div class="callout-label">Root Cause — Wrong GL Enum for glGetInteger</div>
         <p><code>GL_TEXTURE_FREE_MEMORY_ATI</code> (0x87FC = 34812) is documented as returning <b>4 values</b> (free memory, current texture memory, etc.), but the game calls <code>glGetInteger(I)I</code> — the single-value variant. The AMD driver allocates a buffer sized for 1 int (4 bytes), then writes at least 2 ints (8 bytes) or more, causing the confirmed off-by-one (actually off-by-3) buffer overrun.</p>
-        <p style="margin-top:8px">This GL enum was <a href="https://registry.khronos.org/OpenGL/extensions/ATI/ATI_meminfo.txt">deprecated by Khronos</a> and should not be queried on modern hardware. NVIDIA drivers apparently handle the size mismatch gracefully; AMD drivers do not.</p>
+        <p style="margin-top:8px">This GL enum was <a href="https://registry.khronos.org/OpenGL/extensions/ATI/ATI_meminfo.txt">deprecated by Khronos</a> and should not be queried this way on modern hardware. <i>(Note: the read at this point in the investigation that "NVIDIA drivers handle the size mismatch gracefully" was later found to be incorrect — see Phase 7's correction, based on inspecting the game's actual NVIDIA code path.)</i></p>
       </div>
 
       <h4>Patch Details</h4>
@@ -1299,6 +1318,128 @@ Child-SP          RetAddr           Call Site
       <ul class="log-list">
         <li><span class="log-icon"></span><a href="https://willmayrink.github.io/pz-bug-tracking/bats/PZ-fix-AMD-test.bat">PZ-fix-AMD-test.bat</a><span class="log-note">Launch script — patches GameWindow.class (if needed) and starts PZ with allocator=system</span></li>
       </ul>
+
+      <div class="callout warning">
+        <div class="callout-label">Correction — Scope of "Zero Crashes" at This Stage</div>
+        <p>The preliminary results above (2 runs, both loading cleanly to the title screen) were reported at the time as a resolved crash. They were not. As Phase 8 shows, the repatch process was inconsistent across sessions for a reason unrelated to the bytecode change itself — a stale, unpatched <code>GameWindow.class</code> was being loaded ahead of the patched JAR. What Phase 6 actually demonstrates is that <b>the patch works when it is the code path actually executed</b>; it does not yet demonstrate a reliable delivery mechanism. That gap is closed in Phase 8.</p>
+      </div>
+    </div>
+
+    <!-- PHASE 7 -->
+    <div id="phase-7">
+      <div class="phase-header">
+        <span class="phase-num">PHASE 7</span>
+        <span class="phase-date">July 2</span>
+      </div>
+      <h3>Root Cause Correction — OpenGL API Misuse, Not an AMD Driver Defect</h3>
+
+      <p>Despite having already notified AMD directly and having confirmation that TIS had separately reported the same crash to AMD, Will continued investigating potential client-side workarounds — on the reasoning that a fix distributable to the community shouldn't have to wait on an upstream driver release, and that the actual defect should be pinned down precisely regardless of who ends up owning the fix.</p>
+
+      <p>A search through the decompiled classes of <code>projectzomboid.jar</code> for usages of the AMD <code>ATI_meminfo</code> extension turned up exactly one call site: <code>GameWindow.InitDisplay()</code>. Cross-referencing against the <a href="https://registry.khronos.org/OpenGL/extensions/ATI/ATI_meminfo.txt">official Khronos ATI_meminfo specification</a> confirmed the mismatch that had only been partially characterized in Phase 6: the queried token, <code>GL_TEXTURE_FREE_MEMORY_ATI</code>, is documented to return <b>four 4-byte integers</b> in a single query. The game was retrieving it with <code>GL11.glGetInteger(int)</code> — the scalar, single-value accessor — instead of <code>GL11.glGetIntegerv(int, IntBuffer)</code>, the vector accessor built for exactly this kind of multi-value token.</p>
+
+      <div class="callout critical">
+        <div class="callout-label">Root Cause — Final</div>
+        <p>The AMD driver (<code>atio6axx.dll</code>) does exactly what the spec says a driver receiving this token should do: it writes four integers back to the caller. The caller supplied a buffer sized for one. The result is a 12-byte overrun on every call. This is a defect in how Build 42 calls the OpenGL API, not a defect in the AMD driver. <b>AMD should be exonerated of fault in this issue.</b></p>
+      </div>
+
+      <p>An earlier working theory in this investigation assumed NVIDIA's driver was simply more forgiving of the same undersized-buffer mismatch. Decompiling the game's NVIDIA code path (bytecode offset 171–229) ruled that out — there is no mismatch to be forgiving of:</p>
+
+<pre><span class="comment">NVX block (BCI 171-229):</span>
+GL.getCapabilities().GL_NVX_gpu_memory_info
+   ifeq → skip
+   ldc_w #36937                                 <span class="comment">// GL_GPU_MEMORY_INFO_CURRENT_AVAILABLE_VIDMEM_NVX</span>
+   <span class="hl-green">invokestatic GL11.glGetInteger(I)I</span>           <span class="comment">// ← NVX: returns 1 int (OK)</span>
+   ...log result...
+   <span class="comment">(repeats for 36935 and 36936)</span></pre>
+
+      <div class="callout finding">
+        <div class="callout-label">Correction — Why NVIDIA Never Crashed</div>
+        <p>The NVX tokens queried on the NVIDIA path (<code>GL_GPU_MEMORY_INFO_*_NVX</code>, 36935/36936/36937) are each genuinely single-value, so <code>glGetInteger</code> is the <b>correct</b> accessor for them — called three separate times, once per token. This is not the same query pattern as the ATI path at all: TIS wrote three correct single-value calls for NVIDIA and one incorrect single-value call for a four-value AMD token. NVIDIA was never at risk of this specific overrun because its code path doesn't share the AMD path's mistake — it isn't a case of NVIDIA's driver "tolerating" anything.</p>
+      </div>
+
+      <p>Two remediations were identified and written up for TIS:</p>
+
+      <h4>Option A — Correct the API Call</h4>
+      <p>Adapt the invoked call so the 4 tokens are retrieved through the vector accessor instead of the scalar one:</p>
+<pre><span class="comment">// ATI block</span>
+GL.getCapabilities().GL_ATI_meminfo
+   ifeq → skip
+   invokestatic BufferUtils.createIntBuffer(I)   <span class="comment">; Create IntBuffer[4]</span>
+   astore_1                                      <span class="comment">; buf</span>
+   sipush 34812                                  <span class="comment">; GL_TEXTURE_FREE_MEMORY_ATI</span>
+   aload_1                                       <span class="comment">; load buf</span>
+   <span class="hl-green">invokestatic GL11.glGetIntegerv(ILjava/nio/IntBuffer;)V</span>  <span class="hl-green">✅ CORRECT</span>
+                                              <span class="comment">; Expects IntBuffer (16 bytes)</span>
+                                              <span class="comment">; Driver writes 4 ints (16 bytes)</span>
+                                              <span class="comment">; → NO OVERRUN</span></pre>
+      <p>This is the fix Will recommends for TIS's official codebase: it preserves the debug telemetry the block exists for, and eliminates the overrun by matching the buffer to what the spec actually promises.</p>
+
+      <h4>Option B — Remove the Block Entirely (Chosen for the Community Patch)</h4>
+      <p>The ATI memory query exists purely to populate a debug log line (<code>"ATI: available texture memory: "</code>) and, per Will's review of the full decompiled game files, is not read anywhere else. For a distributable community-side workaround that doesn't require rebuilding against TIS's build environment, removing the block outright was the simpler and lower-risk option — it was implemented via a single <code>goto</code> replacing the conditional branch (see Phase 6), fully bypassing the faulty query with no other bytecode touched.</p>
+
+      <div class="callout warning">
+        <div class="callout-label">Transparency Disclaimer (as posted to the community)</div>
+        <p>"I didn't change anything else in the files — you can decompile it yourself and run it through any static analysis or AI tool to check the validity of the JAR." The patched JAR was offered on request via PM or forum reply, always paired with a plain-text instructions file and an explicit reminder to back up the original <code>projectzomboid.jar</code> before applying it. Players uncomfortable running a community-patched binary were explicitly told it was completely reasonable to wait for an official fix from TIS instead.</p>
+        <p style="margin-top:8px">Testing at this point (Option B, before the Phase 8 fix): one prior session of ~1 hour continuous play plus multiple restarts and additional gameplay, and a same-day session of ~45 minutes plus a couple of restarts — no crashes observed in either. As Phase 8 shows, this result was encouraging but not yet reliable.</p>
+      </div>
+    </div>
+
+    <!-- PHASE 8 -->
+    <div id="phase-8">
+      <div class="phase-header">
+        <span class="phase-num">PHASE 8</span>
+        <span class="phase-date">July 3</span>
+      </div>
+      <h3>Classloader Precedence Bug — Loose <code>.class</code> File Silently Overriding the Patched JAR</h3>
+
+      <p>Will decompiled <code>projectzomboid.jar</code> again and applied the bytecode change himself directly — a simple <code>goto</code> replacing the conditional branch to fully eliminate the faulty ATI block, consistent with Option B. After recompiling the JAR, the crash reappeared intermittently, as if the patch weren't being applied at all despite the JAR on disk being correctly modified and verified with <code>javap -c -p</code>.</p>
+
+      <div class="callout critical">
+        <div class="callout-label">Root Cause of the Inconsistent Results</div>
+        <p>The game's launch script sets <code>SET PZ_CLASSPATH=./;projectzomboid.jar</code>. Because <code>./</code> (the current working directory) is listed <b>before</b> the JAR on the classpath, the JVM's classloader resolves any class present as a loose file in the working directory <b>ahead of</b> the same class packaged inside the JAR. An exposed, unpatched copy existed on disk at <code>.\ProjectZomboid\zombie\GameWindow.class</code> — almost certainly left behind by an earlier decompile/recompile cycle or a prior debugging pass — and this stale copy was being loaded instead of the freshly patched class inside <code>projectzomboid.jar</code>, no matter how many times the JAR itself was correctly repatched.</p>
+      </div>
+
+      <p>This fully explains the inconsistency seen across Phases 6 and 7: the patch was correct and had been correct since Phase 6, but whether it actually took effect on a given run depended on whether a stale loose <code>.class</code> file happened to be sitting in the working directory at launch — an environmental variable that had nothing to do with the bytecode fix itself.</p>
+
+      <h4>Resolution</h4>
+      <div class="tbl-wrap">
+        <table>
+          <tbody>
+            <tr><td>1</td><td>Backed up the exposed <code>.\ProjectZomboid\zombie\GameWindow.class</code> file (renamed, not deleted) so it could no longer shadow the JAR's version on the classpath.</td></tr>
+            <tr><td>2</td><td>Recompiled <code>projectzomboid.jar</code> once more from a clean decompile to remove any doubt about which bytecode was actually packaged.</td></tr>
+            <tr><td>3</td><td>Launched and played for approximately 2 hours continuously.</td></tr>
+            <tr><td>4</td><td><b>Result: zero crashes.</b> This is the first session where the patch's actual code path could be guaranteed, and it held.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout finding">
+        <div class="callout-label">Practical Implication for Anyone Applying This Patch</div>
+        <p>Anyone repatching <code>projectzomboid.jar</code> by hand should check their Project Zomboid installation folder for a loose <code>zombie/GameWindow.class</code> (or any exposed <code>.class</code> file under the working directory matching a class inside the JAR) before assuming a repatch has failed. Given the classpath order (<code>./;projectzomboid.jar</code>), a stale loose class will always win silently, with no error or warning.</p>
+      </div>
+
+      <h4>Logs — Phase 8</h4>
+      <ul class="log-list">
+        <li class="ok"><span class="log-icon"></span><span>2026-07-03 session — patched JAR, loose class backed up — ~2h continuous play</span><span class="log-note">0 crashes</span></li>
+      </ul>
+    </div>
+
+    <!-- PHASE 9 -->
+    <div id="phase-9">
+      <div class="phase-header">
+        <span class="phase-num">PHASE 9</span>
+        <span class="phase-date">July 4</span>
+      </div>
+      <h3>Extended Validation — Zero Crashes Sustained</h3>
+
+      <p>With the classloader precedence issue resolved and the correct patched class confirmed as the one actually being executed, Will continued playing for a further session of approximately 4 hours.</p>
+
+      <div class="callout finding">
+        <div class="callout-label">Result</div>
+        <p><b>Zero crashes</b>, bringing total validated crash-free playtime under this candidate fix to roughly 6 hours across two independent sessions (July 3 and July 4), on top of the earlier — now understood to be less reliable — Phase 6/7 tests.</p>
+      </div>
+
+      <p>This is treated as a strong single-user result, <b>not as closure of the investigation</b>. More testing from other affected players is still needed before this can be called resolved. An open call for other AMD-affected users to try the patched JAR was made alongside the Phase 6–7 updates; so far no one has taken it up — it appears most would rather wait for an official fix from TIS than run a community-patched JAR themselves, which is a completely reasonable choice. See <a href="#recommendations">Recommendations</a> for current outreach status.</p>
     </div>
   </section>
 
@@ -1307,7 +1448,12 @@ Child-SP          RetAddr           Call Site
     <div class="section-label">External Knowledge Base</div>
     <h2>Related Cases</h2>
 
-    <p>A comprehensive search across GitHub Issues, LWJGL Forum, Stack Overflow, Microsoft Learn/Q&amp;A, and technical blogs identified nine relevant cases.</p>
+    <p>A comprehensive search across GitHub Issues, LWJGL Forum, Stack Overflow, Microsoft Learn/Q&amp;A, and technical blogs identified nine cases with heap-corruption profiles similar to what was being seen here. They were gathered while the "jemalloc amplification" theory (Branch 2) was still the leading explanation for gameplay crashes.</p>
+
+    <div class="callout warning">
+      <div class="callout-label">Status Update — None of These Are the Mechanism</div>
+      <p>With the root cause identified in Phase 7 as a client-side OpenGL API misuse, none of the jemalloc/mixed-allocator patterns below turned out to be what was happening in Project Zomboid. They're kept here because the parallels were genuinely close enough to justify the investigation at the time, and because ruling out a plausible external cause is as much a part of the QA record as confirming the real one.</p>
+    </div>
 
     <div class="case-card">
       <div class="case-header">
@@ -1317,7 +1463,7 @@ Child-SP          RetAddr           Call Site
       </div>
       <a href="https://github.com/LWJGL/lwjgl3/issues/775">github.com/LWJGL/lwjgl3/issues/775</a>
       <p class="case-desc" style="margin-top:8px"><b>Exception:</b> <code>c0000374</code> — Root cause: mixed allocator — <code>PointerBuffer.allocateDirect()</code> (system) freed via jemalloc. Resolution: use <code>memAlloc()</code> from LWJGL.</p>
-      <div class="case-connection"><b>Connection to PZ:</b> Proves mixed allocator (system + jemalloc) causes <code>c0000374</code> — same pattern as PZ when <code>GetPrimitiveArrayCritical</code> (system) and LWJGL jemalloc interact.</div>
+      <div class="case-connection"><b>Why it was investigated:</b> Proves mixed allocator (system + jemalloc) <i>can</i> cause <code>c0000374</code> in LWJGL generally. <b>Ruled out for PZ:</b> the actual crash here is a driver-side overrun from a bad OpenGL call, not a mixed-allocator free/alloc mismatch.</div>
     </div>
 
     <div class="case-card">
@@ -1328,7 +1474,7 @@ Child-SP          RetAddr           Call Site
       </div>
       <a href="https://github.com/LWJGL/lwjgl3/issues/209">github.com/LWJGL/lwjgl3/issues/209</a>
       <p class="case-desc" style="margin-top:8px"><b>Exception:</b> <code>c0000005</code> in jemalloc.dll — Root cause: stb_image allocated via system <code>malloc()</code>, LWJGL redirected <code>free()</code> to jemalloc. Closed with <code>allocator=system</code> workaround.</p>
-      <div class="case-connection"><b>Connection to PZ:</b> Same pattern — C library allocates with system allocator, LWJGL frees via jemalloc (Bullet Physics, etc.).</div>
+      <div class="case-connection"><b>Why it was investigated:</b> Same general pattern — C library allocates with system allocator, LWJGL frees via jemalloc. <b>Ruled out for PZ:</b> no free/allocator mismatch was involved; the actual bug is an oversized write from a single OpenGL call.</div>
     </div>
 
     <div class="case-card">
@@ -1339,7 +1485,7 @@ Child-SP          RetAddr           Call Site
       </div>
       <a href="https://github.com/jemalloc/jemalloc/issues/1317">github.com/jemalloc/jemalloc/issues/1317</a>
       <p class="case-desc" style="margin-top:8px"><b>Exception:</b> <code>c0000005</code> + deadlock — Race condition when first jemalloc call comes from a non-main thread.</p>
-      <div class="case-connection"><b>Connection to PZ:</b> PZ creates multiple threads during init (audio, render, physics, Lua). If jemalloc is first called from a worker thread, this race triggers.</div>
+      <div class="case-connection"><b>Why it was investigated:</b> PZ creates multiple threads during init (audio, render, physics, Lua); if jemalloc's first call comes from a worker thread, this open jemalloc race could in theory trigger. <b>Ruled out for PZ:</b> the crash occurs even with jemalloc disabled entirely (system allocator), which this race condition can't explain.</div>
     </div>
 
     <div class="case-card">
@@ -1350,7 +1496,7 @@ Child-SP          RetAddr           Call Site
       </div>
       <a href="https://github.com/jemalloc/jemalloc/issues/2724">github.com/jemalloc/jemalloc/issues/2724</a>
       <p class="case-desc" style="margin-top:8px"><b>Exception:</b> <code>c0000005</code> in <code>ehooks_default_zero_impl</code> — <code>extent_recycle()</code> returning corrupted address during multi-threaded init on <b>Windows build 26100</b>.</p>
-      <div class="case-connection"><b>Critical connection:</b> Occurred on the exact same ntdll build as Will and SemaGD's machines. Demonstrates jemalloc instability specific to this Windows build.</div>
+      <div class="case-connection"><b>Why it was investigated:</b> Occurred on the exact same ntdll build as Will and SemaGD's machines, suggesting a build-specific jemalloc instability. <b>Ruled out for PZ:</b> the definitive fix (Phases 6–9) eliminated crashes without changing jemalloc, ntdll, or the OS build at all — this Windows-build coincidence wasn't the cause here.</div>
     </div>
 
     <div class="case-card">
@@ -1361,7 +1507,7 @@ Child-SP          RetAddr           Call Site
       </div>
       <a href="https://github.com/jemalloc/jemalloc/issues/2721">github.com/jemalloc/jemalloc/issues/2721</a>
       <p class="case-desc" style="margin-top:8px"><b>Exception:</b> <code>c0000005</code> — Thread termination + concurrent initialization causing corrupted cache bin.</p>
-      <div class="case-connection"><b>Connection to PZ:</b> PZ creates and destroys threads during gameplay, triggering <code>tcache_cleanup</code>.</div>
+      <div class="case-connection"><b>Why it was investigated:</b> PZ creates and destroys threads during gameplay, which could trigger <code>tcache_cleanup</code>. <b>Ruled out for PZ:</b> not applicable once jemalloc itself was excluded as a factor (see Phase 2 conclusion).</div>
     </div>
 
     <div class="case-card">
@@ -1372,7 +1518,7 @@ Child-SP          RetAddr           Call Site
       </div>
       <a href="https://github.com/jemalloc/jemalloc/issues/2490">github.com/jemalloc/jemalloc/issues/2490</a>
       <p class="case-desc" style="margin-top:8px"><b>Exception:</b> <code>c0000005</code> + <code>WRONG_SYMBOLS</code> + corrupted stack.</p>
-      <div class="case-connection"><b>Connection to PZ:</b> jemalloc can corrupt the stack beyond recognition — directly matches the <code>StackHash_8486</code> behavior seen in PZ crashes without PageHeap.</div>
+      <div class="case-connection"><b>Why it was investigated:</b> jemalloc can corrupt the stack beyond recognition, which matched the unresolvable <code>StackHash_8486</code> behavior seen in PZ crashes without PageHeap. <b>Ruled out for PZ:</b> PageHeap traced the actual overrun to the AMD driver call site, not to jemalloc stack corruption.</div>
     </div>
 
     <div class="case-card">
@@ -1383,7 +1529,7 @@ Child-SP          RetAddr           Call Site
       </div>
       <a href="https://github.com/dotnet/runtime/issues/68225">github.com/dotnet/runtime/issues/68225</a>
       <p class="case-desc" style="margin-top:8px"><b>Exception:</b> <code>c0000374</code> — Hundreds of users affected; devs could not reproduce. Root cause: Windows bug in <code>UiaDisconnectProvider()</code> race condition.</p>
-      <div class="case-connection"><b>Critical parallel:</b> A Windows-specific heap corruption bug affecting hundreds of users that devs couldn't reproduce — only fixed by a Windows update. The 26200 build may have similar regressions.</div>
+      <div class="case-connection"><b>Why it was investigated:</b> A Windows-specific heap corruption bug affecting hundreds of users that developers couldn't reproduce, only fixed by a Windows update — raised the possibility that build 26200 had its own regression. <b>Ruled out for PZ:</b> the definitive fix required no Windows update; it was entirely contained to one Java class in the game's own JAR.</div>
     </div>
 
     <div class="case-card">
@@ -1394,7 +1540,7 @@ Child-SP          RetAddr           Call Site
       </div>
       <a href="http://forum.lwjgl.org/index.php?topic=7233.0">forum.lwjgl.org</a>
       <p class="case-desc" style="margin-top:8px"><b>Exception:</b> <code>c0000374</code> + <code>c0000005</code> — Mixed allocator: <code>VkBuffer</code> mapped via JNI, freed via LWJGL jemalloc. Intermittent after thousands of operations.</p>
-      <div class="case-connection"><b>Connection to PZ:</b> Intermittent crash profile after extended operations matches PZ perfectly.</div>
+      <div class="case-connection"><b>Why it was investigated:</b> The intermittent crash profile after extended operations matched PZ's gameplay crashes closely. <b>Ruled out for PZ:</b> no VkBuffer/JNI-to-jemalloc mapping mismatch exists in PZ's code path — the resemblance was coincidental.</div>
     </div>
 
     <div class="case-card">
@@ -1405,10 +1551,10 @@ Child-SP          RetAddr           Call Site
       </div>
       <a href="https://learn.microsoft.com/en-us/answers/questions/3892641/ntdll-dll-file-is-causing-an-error-crashing-the-ap">learn.microsoft.com</a>
       <p class="case-desc" style="margin-top:8px"><b>Exception:</b> <code>c0000005</code> — ntdll.dll version <code>10.0.26100.3323</code>. "Java and 24H2 aren't working very well" (March 2025). Suggested workarounds: compatibility mode or rollback to 23H2.</p>
-      <div class="case-connection"><b>Direct confirmation:</b> Build 26100 has documented issues with Java JNI applications — reported a full year before PZ crashes were documented.</div>
+      <div class="case-connection"><b>Why it was investigated:</b> Build 26100 has documented issues with Java JNI applications, reported a full year before PZ crashes were documented, and Will's/SemaGD's machines were on that exact build. <b>Ruled out for PZ:</b> the ntdll build mismatch (Phase 3) turned out to be an unrelated, coincidental quirk of the same machines — the fix worked without touching Windows, ntdll, or the JNI layer at all.</div>
     </div>
 
-    <h3>Recurring Pattern — Mixed Allocator</h3>
+    <h3>Recurring Pattern — Mixed Allocator (Explored, Not Applicable to PZ)</h3>
     <div class="tbl-wrap">
       <table>
         <thead>
@@ -1419,10 +1565,9 @@ Child-SP          RetAddr           Call Site
           <tr><td>#2 LWJGL #209</td><td>stb <code>malloc</code> (system)</td><td><code>free</code> via jemalloc</td><td><code>c0000005</code></td></tr>
           <tr><td>#8 tlf30 Forum</td><td>VkBuffer mapping (JNI)</td><td><code>MemoryUtil.free()</code> (jemalloc)</td><td><code>c0000374</code></td></tr>
           <tr>
-            <td><b>PZ (Branch 2 hypothesis)</b></td>
-            <td><code>GetPrimitiveArrayCritical</code> (system)</td>
-            <td>LWJGL buffer management (jemalloc)</td>
-            <td><code>c0000374</code></td>
+            <td><b>PZ (ruled out)</b></td>
+            <td colspan="2" style="color:var(--text-dim)">No mixed-allocator mismatch — the actual bug is a single OpenGL call writing past its own buffer</td>
+            <td><code>c0000005</code> / <code>c0000374</code></td>
           </tr>
         </tbody>
       </table>
@@ -1436,14 +1581,12 @@ Child-SP          RetAddr           Call Site
 
     <h3>What We Know</h3>
     <ol style="padding-left:20px; color:var(--text); font-size:13px; line-height:1.8;">
-      <li><b>AMD OpenGL driver (<code>atio6axx.dll</code>, Adrenalin 26.1.1, Dec 2025) has a confirmed buffer overrun</b> — writes 4 bytes past end of buffer during <code>glGetInteger</code> at <code>InitDisplay</code>. Confirmed via PageHeap.</li>
-      <li><b>All confirmed affected users are AMD GPU users.</b> No crash reports have been verified on NVIDIA or Intel hardware.</li>
-      <li><b>PageHeap successfully identified the crash source</b> — without it, the off-by-one silently corrupts heap data, causing delayed <code>c0000374</code> crashes with unresolvable <code>StackHash_8486</code> stacks.</li>
-      <li><b>Disabling jemalloc (<code>allocator=system</code>) significantly reduced gameplay crashes</b> for Will and SemaGD — consistent with Branch 2 hypothesis that jemalloc amplifies AMD driver corruption.</li>
-      <li><b>ntdll.dll build 26100 on OS build 26200</b> confirmed in two independent environments (Will and SemaGD).</li>
-      <li><b>Windows 24H2 (build 26100) has documented issues with Java JNI applications</b> (Case #9).</li>
-      <li><b>jemalloc has multiple unpatched race conditions on Windows</b>, exacerbated during multi-threaded initialization (Cases #3, #4, #5).</li>
-      <li><b>🧪 Bytecode patch implemented — in testing phase.</b> A <code>GameWindow.class</code> bytecode patch (<code>ifeq→goto</code> at offset 145) skips the <code>GL_TEXTURE_FREE_MEMORY_ATI</code> query. Preliminary tests show no crash, but extended testing is needed: without <code>allocator=system</code>, prolonged gameplay, and multiple sessions.</li>
+      <li><b>Confirmed buffer overrun during <code>glGetInteger</code> at <code>InitDisplay</code></b> — the AMD driver (<code>atio6axx.dll</code>, Adrenalin 26.1.1, Dec 2025) writes the 4 values the queried token is documented to return; the buffer supplied by the game is sized for 1. Confirmed via PageHeap. <b>Reclassified in Phase 7:</b> this is caused by the game calling the wrong OpenGL entry point (<code>glGetInteger</code> instead of <code>glGetIntegerv</code>), not by a defect in the AMD driver.</li>
+      <li><b>All confirmed affected users are AMD GPU users.</b> No crash reports have been verified on NVIDIA or Intel hardware — consistent with the finding that the game's NVIDIA code path queries different, genuinely single-value tokens and never shares the AMD path's mismatched-accessor mistake (see Phase 7).</li>
+      <li><b>PageHeap successfully identified the crash source</b> — without it, the overrun silently corrupts heap data, causing delayed <code>c0000374</code> crashes with unresolvable <code>StackHash_8486</code> stacks.</li>
+      <li><b>Ruled out as contributing causes:</b> garbage collection settings (Phase 1), the LWJGL/jemalloc allocator (Phase 2), the <code>ntdll.dll</code> version mismatch on build 26200 (Phase 3), and Windows 24H2's documented Java/JNI issues (Related Cases #9). All four were explored in depth because they correlated with the symptoms at the time; none of them explain why the crash occurs, and the definitive fix (Phases 6–9) eliminated crashes without touching any of them.</li>
+      <li><b>🧪 Bytecode patch — candidate fix, single-tester confirmed.</b> A <code>GameWindow.class</code> bytecode patch (<code>ifeq→goto</code> at offset 145) skips the faulty <code>GL_TEXTURE_FREE_MEMORY_ATI</code> query entirely. Early inconsistent results (Phases 6–7) turned out to be caused by a classloader precedence issue — a stale loose <code>.class</code> file shadowing the patched JAR — not by the fix itself (Phase 8). Once corrected, ~6 hours of continuous play across two sessions produced zero crashes (Phases 8–9). <b>Still needs testing from other AMD-affected players before it can be considered resolved.</b></li>
+      <li><b>Community validation is still limited to one user.</b> Despite an open invitation for other AMD-affected players to request the patched JAR, no additional testers came forward as of this update — most seem to prefer waiting for an official fix from TIS rather than running a community-patched JAR, which is understandable.</li>
     </ol>
 
     <h3>User Impact Summary</h3>
@@ -1458,8 +1601,8 @@ Child-SP          RetAddr           Call Site
             <td>AMD RX 590</td>
             <td>26200</td>
             <td>26100</td>
-            <td>Reduced gameplay crashes</td>
-            <td><span class="tag green">Root cause confirmed</span></td>
+            <td>Zero crashes — 6h across 2 sessions (patched JAR, loose class fixed)</td>
+            <td><span class="tag yellow">Candidate fix — awaiting more testers</span></td>
           </tr>
           <tr>
             <td>SemaGD</td>
@@ -1480,6 +1623,7 @@ Child-SP          RetAddr           Call Site
         </tbody>
       </table>
     </div>
+    <p style="font-size:12px; color:var(--text-dim); margin-top:8px;">Note: the <code>allocator=system</code> column reflects what each user happened to be running historically, back when the allocator looked like a relevant variable. It's kept as a factual record, not because the setting is believed to affect whether the crash occurs — see the Methodology Note under Two Crash Branches.</p>
   </section>
 
   <!-- OPEN QUESTIONS -->
@@ -1490,28 +1634,36 @@ Child-SP          RetAddr           Call Site
     <ul class="question-list">
       <li>
         <span class="q-num">01</span>
-        <span>Is the AMD driver buffer overrun universal to all AMD GPUs, or specific to the RX 590 / Adrenalin 26.1.1 / certain driver versions? Newer driver versions may resolve Branch 1 entirely.</span>
+        <span>Does every AMD driver version write all 4 documented values for <code>GL_TEXTURE_FREE_MEMORY_ATI</code> (making every AMD GPU affected), or do some older/newer drivers behave differently? This affects how many players are impacted, but not the fix itself — a newer driver isn't expected to resolve this, since the driver is behaving correctly per spec.</span>
       </li>
       <li>
         <span class="q-num">02</span>
-        <span>Why does Kolopis crash even with <code>allocator=system</code>? His ntdll is build 19041 (different from Will and SemaGD's 26100). What GPU and driver does he have? Confirming AMD would strengthen the per-GPU-vendor hypothesis.</span>
+        <span>Does Kolopis have an AMD GPU hitting this same bug? His crashes persisted under every configuration tested before the definitive fix existed. Given that GC, allocator, and ntdll version have all been ruled out as factors, the most likely explanation is simply that he was hitting the same OpenGL misuse and hadn't yet tried the Phase 6+ patch. Confirming his GPU vendor would close this out.</span>
+        <span class="q-answer">↳ Likely answered by Phase 7, pending confirmation. No longer treated as a separate mystery.</span>
       </li>
       <li>
         <span class="q-num">03</span>
-        <span>Why does <code>glfw.dll</code> trigger <code>RtlReAllocateHeap</code> at 4 seconds in SemaGD's Dump #1? Is GLFW tripping over AMD driver corruption seeded earlier, or is there a separate GLFW-related issue?</span>
+        <span>Why did <code>glfw.dll</code> trigger <code>RtlReAllocateHeap</code> at 4 seconds in SemaGD's Dump #1?</span>
+        <span class="q-answer">✅ <b>ANSWERED.</b> This was simply the first place in that particular session where the memory corrupted by the <code>InitDisplay()</code> overrun happened to be touched again. Nothing GLFW-specific was wrong.</span>
       </li>
       <li>
         <span class="q-num">04</span>
-        <span>Is the ntdll build 26100 / OS build 26200 mismatch a causal amplifier or a coincidental correlation? DISM did not repair it. Could an in-place Windows upgrade resolve it and change crash behavior independently of driver state?</span>
+        <span>Is the ntdll build 26100 / OS build 26200 mismatch a causal amplifier or a coincidental correlation?</span>
+        <span class="q-answer">✅ <b>ANSWERED — ruled out.</b> The definitive fix (Phases 6–9) eliminated crashes without touching Windows, ntdll, or the OS build at all. The mismatch is a real but unrelated quirk of the 25H2 preview channel (see Phase 3).</span>
       </li>
       <li>
         <span class="q-num">05</span>
         <span>Which specific <code>glGetInteger</code> queries are made in <code>InitDisplay()</code>? Could the game be querying a deprecated or extension-specific GL enum that causes the AMD driver to read from an undersized buffer?</span>
-        <span class="q-answer">✅ <b>ANSWERED.</b> The query is <code>GL_TEXTURE_FREE_MEMORY_ATI</code> (0x87FC) — a 4-value enum called via single-value <code>glGetInteger</code>. Deprecated Khronos extension. Patch skips it; crash gone.</span>
+        <span class="q-answer">✅ <b>ANSWERED.</b> The query is <code>GL_TEXTURE_FREE_MEMORY_ATI</code> (0x87FC) — a 4-value enum called via single-value <code>glGetInteger</code>. Patch removes it; crash gone.</span>
       </li>
       <li>
         <span class="q-num">06</span>
-        <span>What LWJGL version does Build 42 use? Upstream fixes for jemalloc interactions may be available in newer LWJGL releases relevant to Branch 2.</span>
+        <span>What LWJGL version does Build 42 use, and could a newer release fix jemalloc-related instability?</span>
+        <span class="q-answer">✅ <b>ANSWERED — no longer relevant.</b> jemalloc was ruled out as a contributing factor (Phase 2 update); this question doesn't need answering to close out the actual bug.</span>
+      </li>
+      <li>
+        <span class="q-num">07</span>
+        <span>Should TIS fix this via Option A (correct <code>glGetIntegerv</code> call, keep the debug telemetry) or Option B (remove the ATI block entirely)? Both eliminate the overrun; the choice is a style/maintenance decision for TIS, not a technical open question.</span>
       </li>
     </ul>
   </section>
@@ -1569,73 +1721,57 @@ Child-SP          RetAddr           Call Site
     <h2>Recommendations for The Indie Stone</h2>
 
     <div class="callout critical">
-      <div class="callout-label">Primary Recommendation — Report to AMD</div>
-      <p>The most impactful action available to TIS is to <b>escalate the AMD driver bug report via official developer channels.</b> The issue has been open on AMD's GitHub tracker for 2 years without successful reproduction — AMD engineers could not reproduce it with the community's evidence. A report from a game studio with access to internal driver debugging tools and a reliable PageHeap reproduction method has a fundamentally better chance of being resolved.</p>
-      <p style="margin-top:12px"><b>A community workaround has been implemented and is in testing phase:</b> a <code>GameWindow.class</code> bytecode patch (one byte: <code>ifeq→goto</code>) that skips the <code>GL_TEXTURE_FREE_MEMORY_ATI</code> query entirely. Preliminary results show no crash. TIS could adopt the same fix at the source code level by removing or guarding the ATI-specific debug query in <code>InitDisplay()</code>.</p>
+      <div class="callout-label">Primary Recommendation — Fix the OpenGL Call in <code>GameWindow.InitDisplay()</code></div>
+      <p>This is a one-method fix, not a driver issue and not an external dependency problem. TIS can resolve it entirely in-house: switch the <code>GL_TEXTURE_FREE_MEMORY_ATI</code> query from <code>glGetInteger(int)</code> to <code>glGetIntegerv(int, IntBuffer)</code> with a properly sized 4-int buffer (Option A, preserves the debug log), or remove the query block entirely (Option B, what the community patch does — zero functional impact, since the query only feeds a debug log line).</p>
+      <p style="margin-top:12px"><b>A community workaround exists as a candidate fix, validated by a single tester (~6 hours crash-free):</b> a <code>GameWindow.class</code> bytecode patch (one byte: <code>ifeq→goto</code>) that removes the block. It is not yet confirmed by additional testers — outreach for more testers has had no response so far — but it demonstrates that Option B carries no observed downside.</p>
     </div>
 
     <div class="rec-block">
-      <div class="rec-block-header">Immediate — Report to AMD Driver Team</div>
+      <div class="rec-block-header">Immediate — Source Fix (No AMD Involvement Needed)</div>
       <ul class="rec-list">
         <li>
           <span class="rec-num">01</span>
-          <span><b>File a driver bug report with AMD via official developer channels.</b> The evidence package is ready: <code>hs_err_pid16052.mdmp</code> (1.57 GB core dump), the JVM crash log pinpointing <code>atio6axx.dll+0x346a8e</code>, and register analysis proving the off-by-one overrun at <code>rdi+rbx*4</code> → unmapped page. The specific driver is Adrenalin 26.1.1, file version <code>31.0.21924.61</code>, built December 11, 2025. The crash site is <code>glGetInteger</code> during <code>GameWindow.InitDisplay()</code> — a standard OpenGL call, not a game-specific edge case.</span>
+          <span><b>Apply Option A or Option B directly to <code>GameWindow.InitDisplay()</code>.</b> The evidence package is ready: the decompiled bytecode showing the mismatched accessor (Phase 7), the PageHeap core dump and JVM crash log pinpointing the exact overrun instruction (Phase 5), and register analysis proving the write lands one page past the buffer. No external report or driver update is a prerequisite for shipping this fix.</span>
         </li>
         <li>
           <span class="rec-num">02</span>
-          <span><b>Escalate the bug report through AMD's developer channels.</b> The issue has been open on AMD's GitHub tracker for 2 years without successful reproduction by AMD engineers. A report from a game studio carries more weight and may trigger deeper investigation with access to internal driver debugging tools. The PageHeap evidence package provides a reliable reproduction method.</span>
-        </li>
-        <li>
-          <span class="rec-num">03</span>
-          <span><b>Include the PageHeap methodology in the report.</b> The fact that <code>StackHash_8486</code> was the surface symptom and PageHeap was required to reveal the true site is important context for AMD's engineers — it explains why users couldn't provide clean crash data before, and demonstrates that the overrun is silent under normal heap conditions.</span>
+          <span><b>No further AMD escalation is needed for this specific crash.</b> The driver behaves exactly as the Khronos spec says it should for the queried token; there is nothing for AMD to fix here. Any existing report to AMD about this crash can be closed or annotated with this finding so their team doesn't spend further time on it.</span>
         </li>
       </ul>
     </div>
 
     <div class="rec-block">
-      <div class="rec-block-header">Short Term — Community Workarounds (While AMD Responds)</div>
+      <div class="rec-block-header">Short Term — Community Workaround (While Waiting on an Official Patch)</div>
       <ul class="rec-list">
         <li>
           <span class="rec-num">01</span>
-          <span><b>🧪 Bytecode patch — in testing phase.</b> A <code>GameWindow.class</code> bytecode patch (<code>ifeq→goto</code> at offset 145) skips the <code>GL_TEXTURE_FREE_MEMORY_ATI</code> query. Preliminary tests show no crash, but more testing is needed. A repatch script is available at <a href="https://willmayrink.github.io/pz-bug-tracking/bats/PZ-fix-AMD-test.bat">PZ-fix-AMD-test.bat</a>. <b>Note:</b> Must be reapplied after each game update.</span>
+          <span><b>🧪 Bytecode patch — candidate fix, single-tester validated.</b> A <code>GameWindow.class</code> bytecode patch (<code>ifeq→goto</code> at offset 145) removes the faulty <code>GL_TEXTURE_FREE_MEMORY_ATI</code> query entirely. Confirmed crash-free for ~6 hours across two sessions once a stale, unpatched loose <code>.class</code> file shadowing the JAR was removed (see Phase 8) — <b>anyone applying this patch by hand should check for and remove any loose <code>zombie/GameWindow.class</code> file in the install directory first</b>, since the launch classpath (<code>./;projectzomboid.jar</code>) silently prefers loose files over the JAR. A repatch script is available at <a href="https://willmayrink.github.io/pz-bug-tracking/bats/PZ-fix-AMD-test.bat">PZ-fix-AMD-test.bat</a>. <b>Note:</b> Must be reapplied after each game update. <b>This is not yet a confirmed fix</b> — it needs testing from other AMD-affected players. An open call for testers has had no uptake so far; most appear to prefer waiting for an official fix from TIS.</span>
         </li>
         <li>
           <span class="rec-num">02</span>
-          <span><b>Advise AMD users to test with the bytecode patch workaround.</b> The AMD driver bug has been open on AMD's GitHub for 2 years with no fix — updating drivers is unlikely to resolve it. The only confirmed working solution is the <code>GameWindow.class</code> bytecode patch.</span>
+          <span><b>Offer the bytecode patch to AMD-affected users as an optional, unofficial workaround</b> while an official TIS patch is prepared, with the same install caveats above (loose-class check, re-apply after updates) and the same disclaimer that it hasn't yet been validated beyond one tester.</span>
         </li>
         <li>
           <span class="rec-num">03</span>
-          <span><b>Consider and test <code>-Dorg.lwjgl.system.allocator=system</code> in the launch script.</b> Officially documented by LWJGL. Safe for all users. Removes jemalloc as an amplifier of AMD driver heap corruption (Branch 2), and aligns with how the investigation has been running. Crashes during gameplay dropped to zero for Will and improved significantly for SemaGD with this flag active.</span>
-        </li>
-        <li>
-          <span class="rec-num">04</span>
-          <span><b>Add a known-issues note targeting AMD users with startup crashes.</b> Users experiencing black-screen crashes at startup on AMD hardware should be directed to apply the bytecode patch workaround. Updating GPU drivers has not resolved this issue — the AMD driver bug has been reported to AMD for 2 years without a fix.</span>
+          <span><b>Add a known-issues note for AMD users experiencing black-screen startup crashes</b>, pointing them either at the community patch (with disclaimers) or telling them the fix is confirmed and an official patch is in progress. GPU driver updates are not expected to help, since the driver isn't the defect.</span>
         </li>
       </ul>
     </div>
 
     <div class="rec-block">
-      <div class="rec-block-header">Medium/Long Term — Internal TIS Investigation</div>
+      <div class="rec-block-header">Medium/Long Term — Internal TIS Follow-Up</div>
       <ul class="rec-list">
         <li>
           <span class="rec-num">01</span>
-          <span><b>✅ DONE — <code>GameWindow.InitDisplay()</code> has been fully decompiled and analyzed.</b> The specific enum is <code>GL_TEXTURE_FREE_MEMORY_ATI</code> (0x87FC), a deprecated Khronos extension that returns 4 values but is called via single-value <code>glGetInteger</code>. The community patch skips this query entirely with zero functional impact. TIS should consider removing this ATI-specific debug query from <code>InitDisplay()</code> in the official codebase — it serves no purpose on modern hardware.</span>
+          <span><b>✅ DONE — <code>GameWindow.InitDisplay()</code> has been fully decompiled and analyzed.</b> Root cause confirmed: the specific token is <code>GL_TEXTURE_FREE_MEMORY_ATI</code> (0x87FC), a Khronos extension that returns 4 values but is queried via the single-value <code>glGetInteger</code> entry point instead of <code>glGetIntegerv</code>. This is a caller-side API misuse in Build 42, <b>not an AMD driver defect</b> — the driver correctly writes the 4 documented values. TIS has two options: (A) switch the call to <code>glGetIntegerv(int, IntBuffer)</code> with a properly sized 4-int buffer to preserve the debug telemetry, or (B) remove the query entirely, as it serves no gameplay purpose on modern hardware and the community patch already validates zero functional impact from doing so.</span>
         </li>
         <li>
           <span class="rec-num">02</span>
-          <span><b>Investigate the GLFW <code>RtlReAllocateHeap</code> crash (SemaGD Dump #1).</b> At 4 seconds into init, <code>glfw.dll</code> triggers a heap failure. This may be AMD driver corruption from the <code>glGetInteger</code> overrun propagating into GLFW's own heap operations. Determining whether GLFW crashes before or after the driver overrun would clarify the failure sequence.</span>
+          <span><b>Confirm the NVX path independently within TIS.</b> All confirmed affected users are on AMD, and Phase 7's decompile shows why: the NVIDIA code path queries different, single-value NVX tokens that never share the ATI path's mismatched-accessor mistake. Internal confirmation from TIS (e.g. running the current build on NVIDIA/Intel hardware) would still be useful to rule out any other AMD-specific code path before closing this out.</span>
         </li>
         <li>
           <span class="rec-num">03</span>
-          <span><b>Evaluate benefits of <code>jemalloc</code></b> It's well known that jemalloc does provide increased performance in certain scenarios, but it also introduces complexity and potential issues on Windows platforms. A thorough analysis of its impact on game stability and performance is warranted.</span>
-        </li>
-        <li>
-          <span class="rec-num">04</span>
-          <span><b>Consider a LWJGL version review.</b> jemalloc has unpatched race conditions on Windows (Issues #1317, #2721, #2724 — all open, some since 2018). A newer LWJGL release may bundle a less broken jemalloc version or a patched Windows allocator path.</span>
-        </li>
-        <li>
-          <span class="rec-num">05</span>
-          <span><b>Test on NVIDIA and Intel hardware internally.</b> All confirmed affected users are on AMD. If TIS can confirm the crash is AMD-exclusive in internal testing, it validates the root cause and focuses the fix entirely on the AMD driver report.</span>
+          <span><b>Consider a broader audit of other GL query call sites</b> for the same class of mistake (scalar accessor used against a multi-value token), since this specific bug shows the pattern exists at least once in the codebase and may exist elsewhere undetected.</span>
         </li>
       </ul>
     </div>
@@ -1650,6 +1786,7 @@ Child-SP          RetAddr           Call Site
       <div class="closing-card-header">Acknowledgements</div>
       <div class="closing-card-body">
         <p>This investigation took months, dozens of sessions, and the patience and generosity of several people who gave their time, their crash dumps, and their willingness to run janky debug scripts at midnight. They deserve to be named.</p>
+        <p>One honest note for anyone reading this as a finished story: this is a candidate fix, not a closed case. It currently has exactly one validated tester. An open invitation for other AMD-affected players to request the patched JAR went out alongside the Phase 6–7 updates, and take-up was essentially nil — the impression is that most affected players would rather wait for an official fix from TIS than run a community-patched JAR themselves, which is a reasonable stance. That doesn't diminish the root-cause finding, but it does mean the "6 hours, zero crashes" result should be read as strong single-user evidence, not as community-wide confirmation — yet.</p>
         <ul class="ack-list">
           <li>
             <span class="ack-handle">SemaGD</span>
@@ -1727,7 +1864,7 @@ gflags /p /disable java.exe</pre>
 
 <span class="comment"># Launch with AMD driver crash workaround + allocator=system</span>
 <a href="https://willmayrink.github.io/pz-bug-tracking/bats/PZ-fix-AMD-test.bat" class="href"><span class="tag green">PZ-fix-AMD-test.bat</a>
-
+</pre>
       </div>
 
       <div class="appendix-block" id="appendix-directory" style="grid-column: 1 / -1;">
@@ -1755,6 +1892,8 @@ gflags /p /disable java.exe</pre>
 │       └── java.exe.18312.dmp            (177 MB)   2026-07-02 CRASH: c0000374 (confirmed match)
 ├── projectzomboid.jar                     (patched GameWindow.class — ifeq→goto offset 145)
 ├── projectzomboid.jar.backup-02jul        (original, unpatched backup)
+├── zombie\
+│   └── GameWindow.class.backup-03jul      (⭐ stale loose class — was shadowing the patched JAR, see Phase 8)
 ├── ProjectZomboid64.bat
 ├── ProjectZomboid64-nojemalloc.bat
 ├── ProjectZomboid64-nojemalloc-debug.bat
@@ -1769,7 +1908,7 @@ gflags /p /disable java.exe</pre>
     <span><b>Investigator:</b> Will</span>
     <span><b>Discord:</b> <a href="https://discord.com/channels/136501320340209664/1476024384794923120">#game-crashes thread</a></span>
     <span><b>TIS:</b> <a href="https://theindiestone.com/forums/index.php?/forum/85-bug-reports/">Indie Stone Bug Reports</a></span>
-    <span style="margin-left:auto; color:var(--text-dim)">Generated July 2, 2026</span>
+    <span style="margin-left:auto; color:var(--text-dim)">Generated July 2, 2026 · Last updated July 4, 2026</span>
   </footer>
 
 </main>
