@@ -793,7 +793,8 @@
   <a href="#phase-5" class="phase-link">Phase 5 — PageHeap</a>
       <a href="#phase-6" class="phase-link">Phase 6 — Testing Phase</a>
       <a href="#phase-7" class="phase-link">Phase 7 — Root Cause Correction</a>
-      <a href="#phase-8" class="phase-link">Phase 8 — Extended Validation</a>
+      <a href="#phase-8" class="phase-link">Phase 8 — Classloader Bug</a>
+      <a href="#phase-9" class="phase-link">Phase 9 — Extended Validation</a>
 
   <div class="nav-group-label">Analysis</div>
   <a href="#related-cases">Related Cases</a>
@@ -1387,23 +1388,58 @@ GL.getCapabilities().GL_ATI_meminfo
     <div id="phase-8">
       <div class="phase-header">
         <span class="phase-num">PHASE 8</span>
-        <span class="phase-date">July 3–4</span>
+        <span class="phase-date">July 3</span>
       </div>
-      <h3>Extended Validation — Zero Crashes Sustained</h3>
+      <h3>Classloader Precedence Bug — Loose <code>.class</code> File Silently Overriding the Patched JAR</h3>
 
-      <p>With the root cause identified and the patch bytecode confirmed, extended testing was performed across multiple sessions totaling approximately 6 hours of continuous gameplay and repeated launch cycles.</p>
+      <p>Will decompiled <code>projectzomboid.jar</code> again and applied the bytecode change himself directly — a simple <code>goto</code> replacing the conditional branch to fully eliminate the faulty ATI block, consistent with Option B. After recompiling the JAR, the crash reappeared intermittently, as if the patch weren't being applied at all despite the JAR on disk being correctly modified and verified with <code>javap -c -p</code>.</p>
+
+      <div class="callout critical">
+        <div class="callout-label">Root Cause of the Inconsistent Results</div>
+        <p>The game's launch script sets <code>SET PZ_CLASSPATH=./;projectzomboid.jar</code>. Because <code>./</code> (the current working directory) is listed <b>before</b> the JAR on the classpath, the JVM's classloader resolves any class present as a loose file in the working directory <b>ahead of</b> the same class packaged inside the JAR. An exposed, unpatched copy existed on disk at <code>.\ProjectZomboid\zombie\GameWindow.class</code> — almost certainly left behind by an earlier decompile/recompile cycle or a prior debugging pass — and this stale copy was being loaded instead of the freshly patched class inside <code>projectzomboid.jar</code>, no matter how many times the JAR itself was correctly repatched.</p>
+      </div>
+
+      <p>This fully explains the inconsistency seen across Phases 6 and 7: the patch was correct and had been correct since Phase 6, but whether it actually took effect on a given run depended on whether a stale loose <code>.class</code> file happened to be sitting in the working directory at launch — an environmental variable that had nothing to do with the bytecode fix itself.</p>
+
+      <h4>Resolution</h4>
+      <div class="tbl-wrap">
+        <table>
+          <tbody>
+            <tr><td>1</td><td>Backed up the exposed <code>.\ProjectZomboid\zombie\GameWindow.class</code> file (renamed, not deleted) so it could no longer shadow the JAR's version on the classpath.</td></tr>
+            <tr><td>2</td><td>Recompiled <code>projectzomboid.jar</code> once more from a clean decompile to remove any doubt about which bytecode was actually packaged.</td></tr>
+            <tr><td>3</td><td>Launched and played for approximately 2 hours continuously.</td></tr>
+            <tr><td>4</td><td><b>Result: zero crashes.</b> This is the first session where the patch's actual code path could be guaranteed, and it held.</td></tr>
+          </tbody>
+        </table>
+      </div>
 
       <div class="callout finding">
-        <div class="callout-label">Result</div>
-        <p><b>Zero crashes</b>, bringing total validated crash-free playtime under this candidate fix to roughly 6 hours across multiple independent sessions.</p>
+        <div class="callout-label">Practical Implication for Anyone Applying This Patch</div>
+        <p>Anyone repatching <code>projectzomboid.jar</code> by hand should check their Project Zomboid installation folder for a loose <code>zombie/GameWindow.class</code> (or any exposed <code>.class</code> file under the working directory matching a class inside the JAR) before assuming a repatch has failed. Given the classpath order (<code>./;projectzomboid.jar</code>), a stale loose class will always win silently, with no error or warning.</p>
       </div>
-
-      <p>This is treated as a strong single-user result, <b>not as closure of the investigation</b>. More testing from other affected players is still needed before this can be called resolved. Community testing with affected AMD users is ongoing; see <a href="#recommendations">Recommendations</a> for current outreach status.</p>
 
       <h4>Logs — Phase 8</h4>
       <ul class="log-list">
-        <li class="ok"><span class="log-icon"></span><span>July 3–4 sessions — patched JAR — ~6h total continuous play across multiple sessions</span><span class="log-note">0 crashes</span></li>
+        <li class="ok"><span class="log-icon"></span><span>2026-07-03 session — patched JAR, loose class backed up — ~2h continuous play</span><span class="log-note">0 crashes</span></li>
       </ul>
+    </div>
+
+    <!-- PHASE 9 -->
+    <div id="phase-9">
+      <div class="phase-header">
+        <span class="phase-num">PHASE 9</span>
+        <span class="phase-date">July 4</span>
+      </div>
+      <h3>Extended Validation — Zero Crashes Sustained</h3>
+
+      <p>With the classloader precedence issue resolved and the correct patched class confirmed as the one actually being executed, Will continued playing for a further session of approximately 4 hours.</p>
+
+      <div class="callout finding">
+        <div class="callout-label">Result</div>
+        <p><b>Zero crashes</b>, bringing total validated crash-free playtime under this candidate fix to roughly 6 hours across two independent sessions (July 3 and July 4), on top of the earlier — now understood to be less reliable — Phase 6/7 tests.</p>
+      </div>
+
+      <p>This is treated as a strong single-user result, <b>not as closure of the investigation</b>. More testing from other affected players is still needed before this can be called resolved. An open call for other AMD-affected users to try the patched JAR was made alongside the Phase 6–7 updates; so far no one has taken it up — it appears most would rather wait for an official fix from TIS than run a community-patched JAR themselves, which is a completely reasonable choice. See <a href="#recommendations">Recommendations</a> for current outreach status.</p>
     </div>
   </section>
 
